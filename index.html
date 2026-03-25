@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compound Interest Explorer | CFA Institute</title>
+  <meta name="description" content="Explore how compound interest grows over time. Adjust principal, rate, and periods to see the curve, table, and key results update live.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="cfa-base.css">
+  <link rel="stylesheet" href="exemplar-specific.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- MathJax 2.7.7 (MathML + tabindex hygiene used across explorers) -->
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      MathML: { extensions: ["content-mathml.js"] },
+      "HTML-CSS": { scale: 95, linebreaks: { automatic: true } },
+      menuSettings: { explorer: false },
+      skipStartupTypeset: false
+    });
+
+    function exemplarRemoveMathJaxTabindex() {
+      document.querySelectorAll('[tabindex]').forEach(function (el) {
+        if (el.classList.contains('MathJax') ||
+            el.classList.contains('MathJax_Display') ||
+            (el.id && el.id.indexOf('MathJax-') === 0) ||
+            el.tagName === 'MATH' ||
+            (el.closest && el.closest('.MathJax'))) {
+          el.removeAttribute('tabindex');
+          el.setAttribute('aria-hidden', 'true');
+        }
+      });
+    }
+
+    MathJax.Hub.Register.StartupHook("End", function () {
+      exemplarRemoveMathJaxTabindex();
+      setTimeout(exemplarRemoveMathJaxTabindex, 100);
+      setTimeout(exemplarRemoveMathJaxTabindex, 500);
+      setTimeout(exemplarRemoveMathJaxTabindex, 1000);
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=MML_HTMLorMML"></script>
+</head>
+<body>
+  <noscript>
+    <div style="padding: 2rem; background: #fef2f2; border: 2px solid #b91c1c; border-radius: 0.5rem; margin: 2rem; text-align: center;">
+      <h2 style="color: #991b1c; margin-bottom: 1rem;">JavaScript Required</h2>
+      <p style="color: #374151; font-size: 1.125rem;">
+        This explorer requires JavaScript for calculations, the chart, and dynamic equations.
+      </p>
+    </div>
+  </noscript>
+
+  <div class="container">
+    <nav role="navigation" aria-label="Skip links">
+      <a href="#principal" class="skip-link">Skip to data entry</a>
+      <a href="#view-table-btn" class="skip-link">Skip to data table</a>
+    </nav>
+
+    <main class="content">
+
+      <section class="card" id="calculator" tabindex="-1" aria-labelledby="calculator-title">
+        <h4 class="card-title" id="calculator-title">Compound Interest Formula</h4>
+        <div class="card-content">
+          <p class="input-instructions" style="color: var(--color-gray-600); margin-bottom: 1rem;">
+            Adjust the principal, annual rate, and number of periods. The equation, chart, and table update automatically. The rate is entered as a percentage (e.g. 5 for 5%); it is divided by 100 in the formula.
+          </p>
+
+          <div class="input-section">
+            <p class="sr-only" id="inputHelp">Enter principal, annual rate as a percentage, and number of periods. Values must stay within the allowed ranges.</p>
+
+            <div class="input-group-inline">
+              <div class="input-inline">
+                <label for="principal" class="input-label-inline">
+                  Principal (<span style="color: var(--color-green-data); font-style: italic;">P</span>):
+                </label>
+                <div class="input-with-suffix-inline">
+                  <input type="text" id="principal" class="input-field-inline input-field-wide"
+                         inputmode="numeric" autocomplete="off" value="1,000"
+                         aria-describedby="inputHelp" aria-required="true">
+                </div>
+              </div>
+
+              <div class="input-inline">
+                <label for="rate" class="input-label-inline">
+                  Annual rate, % (<span style="color: var(--color-orange-deep); font-style: italic;">r</span>):
+                </label>
+                <div class="input-with-suffix-inline">
+                  <input type="number" id="rate" class="input-field-inline"
+                         inputmode="decimal" step="0.01" min="0.01" max="50" value="5"
+                         aria-describedby="inputHelp" aria-required="true">
+                </div>
+              </div>
+
+              <div class="input-inline">
+                <label for="periods" class="input-label-inline">
+                  Periods (<span style="color: var(--color-teal-data); font-style: italic;">n</span>, integer):
+                </label>
+                <div class="input-with-suffix-inline">
+                  <input type="number" id="periods" class="input-field-inline"
+                         inputmode="numeric" step="1" min="1" max="50" value="10"
+                         aria-describedby="inputHelp" aria-required="true">
+                </div>
+              </div>
+            </div>
+
+            <div id="validation-summary" class="validation-summary" role="alert" tabindex="-1"
+                 aria-live="assertive" style="display: none;">
+              <div class="validation-title">Please correct the following:</div>
+              <ul id="validation-list"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="equation-card" class="card" role="region" aria-labelledby="equation-card-title">
+        <h4 class="card-title" id="equation-card-title">Dynamic equation</h4>
+        <p class="equation-intro">
+          The MathML below is rebuilt from your inputs and typeset with MathJax. The rate <em>r</em> is shown as its decimal equivalent (e.g. 5% → 0.05).
+        </p>
+        <div class="equation-container" role="region" aria-label="Compound interest equation with current numeric values"
+             id="dynamic-equation-container">
+          <div id="dynamic-mathml-equation"></div>
+        </div>
+      </section>
+
+      <section class="card" id="visualizer" tabindex="-1" aria-labelledby="viz-title">
+        <h4 class="card-title" id="viz-title">Visualization</h4>
+        <div class="card-content">
+          <div class="view-controls">
+            <div role="region" aria-label="Chart legend">
+              <div class="legend" id="chart-legend" role="list">
+                <span class="legend-item" role="listitem">
+                  <span class="legend-color" style="background-color: var(--color-blue-interactive);"></span>
+                  <span>
+                    <span style="font-style: italic; color: var(--color-blue-interactive);">A</span>
+                    =
+                    <span style="font-style: italic; color: var(--color-green-data);">P</span>(1 +
+                    <span style="font-style: italic; color: var(--color-orange-deep);">r</span>)<sup style="font-size: 0.75em; font-style: italic; color: var(--color-teal-data);">n</sup>
+                  </span>
+                </span>
+              </div>
+            </div>
+            <div class="button-group" role="toolbar" aria-label="Chart or table view">
+              <button type="button" id="view-chart-btn" class="toggle-btn active" aria-pressed="true">Chart</button>
+              <button type="button" id="view-table-btn" class="toggle-btn" aria-pressed="false">Table</button>
+            </div>
+          </div>
+
+          <p class="text-xs text-gray-500" style="margin-bottom: 0.75rem;">
+            Use <kbd>←</kbd> <kbd>→</kbd> arrow keys to switch views. Table view gives full keyboard access to all values.
+          </p>
+          <p id="chart-helper-text" class="text-xs text-gray-500" style="display: none; margin-bottom: 0.75rem;">
+            Chart view is not available at narrow screen widths. Showing table view.
+          </p>
+
+          <div class="sr-only" aria-live="polite" aria-atomic="true" id="view-announcement"></div>
+
+          <p id="chart-accessibility-note" class="sr-only" hidden>
+            This is a visual chart and cannot be navigated by keyboard. Switch to Table view for full access to the data values.
+          </p>
+
+          <div id="chart-container">
+            <div id="chart-region" class="chart-wrapper" role="region" aria-labelledby="line-chart-title" tabindex="-1">
+              <h4 id="line-chart-title" class="sr-only">Line chart of accumulated amount versus period for the current compound interest inputs</h4>
+              <!-- role="img" is required here so aria-label is permitted on the canvas element -->
+              <canvas id="chart" role="img" aria-label="Line chart of amount A versus period n. Use Table view for exact values."></canvas>
+            </div>
+
+          <div id="table-container" class="table-wrapper table-card-layout" style="display: none;" role="region" tabindex="-1">
+            <table class="data-table" id="data-table" aria-labelledby="table-caption">
+              <caption id="table-caption">Accumulated amount per period for A = P(1 + r)^n</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Period (<em style="color: var(--color-teal-data);">n</em>)</th>
+                  <th scope="col">Amount (<em style="color: var(--color-blue-interactive);">A</em>)</th>
+                </tr>
+              </thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="results-card" tabindex="-1" aria-labelledby="results-title">
+        <h4 class="card-title" id="results-title">Results</h4>
+        <div class="card-content">
+          <div id="calculation-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+          <div id="results-content" class="exemplar-results">
+            <!-- Populated by calculator.js -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script type="module" src="calculator.js"></script>
+</body>
+</html>

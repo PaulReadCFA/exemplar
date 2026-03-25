@@ -1,0 +1,138 @@
+/* Compound Interest Explorer — minimal layout tweaks only.
+   Shared tokens, cards, inputs, tables, and toggles come from cfa-base.css. */
+
+/* ---------- Inline input group ---------- */
+.input-group-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: flex-end;
+}
+
+.input-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.input-label-inline {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-gray-700);
+  white-space: nowrap;
+}
+
+.input-with-suffix-inline {
+  display: flex;
+  align-items: center;
+}
+
+.input-field-inline {
+  width: 6rem;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  border: 1.5px solid var(--color-input-border);
+  border-radius: 0.375rem;
+  color: var(--color-gray-800);
+  background: white;
+  line-height: 1.4;
+}
+
+/* Wider variant for fields that can hold larger values (e.g. principal up to 1,000,000) */
+.input-field-wide {
+  width: 8.5rem;
+}
+
+.input-field-inline:focus {
+  outline: 2px solid var(--color-blue-interactive);
+  outline-offset: 1px;
+  border-color: var(--color-blue-interactive);
+}
+
+.input-field-inline.error {
+  border-color: var(--color-error);
+  background-color: var(--color-error-bg);
+}
+
+@media (max-width: 480px) {
+  .input-group-inline {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .input-field-inline,
+  .input-field-wide {
+    width: 100%;
+  }
+}
+
+/* ---------- Equation card ---------- */
+#equation-card .equation-container {
+  min-height: 4rem;
+}
+
+/* ---------- Visualization card ---------- */
+#chart-region {
+  min-height: 280px;
+}
+
+#table-container {
+  margin-top: 0.5rem;
+}
+
+/* ---------- Formula key (variable legend below equation) ---------- */
+.formula-key {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid var(--color-gray-200);
+  padding-top: 1rem;
+}
+
+.formula-key-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.formula-key dt {
+  flex: 0 0 1.5rem;
+  font-size: 1.0625rem;
+  text-align: center;
+}
+
+.formula-key dd {
+  color: var(--color-gray-700);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+.exemplar-results {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .exemplar-results {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.exemplar-result-block {
+  padding: 1rem;
+  background: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.5rem;
+}
+
+.exemplar-result-block .label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  margin-bottom: 0.25rem;
+}
+
+.exemplar-result-block .value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-primary-dark-blue);
+}

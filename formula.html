@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compound Interest Formula | CFA Institute</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="cfa-base.css">
+  <link rel="stylesheet" href="exemplar-specific.css">
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      MathML: { extensions: ["content-mathml.js"] },
+      "HTML-CSS": { scale: 95, linebreaks: { automatic: true } },
+      menuSettings: { explorer: false },
+      skipStartupTypeset: false
+    });
+
+    MathJax.Hub.Register.StartupHook("End", function () {
+      document.querySelectorAll('[tabindex]').forEach(function (el) {
+        if (el.classList.contains('MathJax') ||
+            el.classList.contains('MathJax_Display') ||
+            (el.id && el.id.indexOf('MathJax-') === 0) ||
+            el.tagName === 'MATH' ||
+            (el.closest && el.closest('.MathJax'))) {
+          el.removeAttribute('tabindex');
+          el.setAttribute('aria-hidden', 'true');
+        }
+      });
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=MML_HTMLorMML"></script>
+</head>
+<body>
+  <div class="container">
+    <main>
+      <section class="card" aria-labelledby="formula-title">
+        <h4 class="card-title" id="formula-title">Compound Interest Formula</h4>
+        <div class="card-content">
+
+          <p style="color: var(--color-gray-700); margin-bottom: 1.25rem;">
+            Compound interest is calculated on both the initial principal and the
+            interest accumulated in previous periods. It can be expressed as:
+          </p>
+
+          <div role="region" aria-label="Compound interest formula" style="margin-bottom: 1.5rem;">
+            <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+              <mrow>
+                <mi mathcolor="#3c6ae5">A</mi>
+                <mo>=</mo>
+                <mi mathcolor="#15803d">P</mi>
+                <mo>&#x00D7;</mo>
+                <msup>
+                  <mrow>
+                    <mo>(</mo>
+                    <mn>1</mn>
+                    <mo>+</mo>
+                    <mi mathcolor="#b95b1d">r</mi>
+                    <mo>)</mo>
+                  </mrow>
+                  <mi mathcolor="#0079a6">n</mi>
+                </msup>
+              </mrow>
+            </math>
+          </div>
+
+          <dl class="formula-key">
+            <div class="formula-key-row">
+              <dt><span style="color: #3c6ae5; font-style: italic; font-weight: 700;">A</span></dt>
+              <dd>Final accumulated amount</dd>
+            </div>
+            <div class="formula-key-row">
+              <dt><span style="color: #15803d; font-style: italic; font-weight: 700;">P</span></dt>
+              <dd>Principal — the initial amount invested or borrowed</dd>
+            </div>
+            <div class="formula-key-row">
+              <dt><span style="color: #b95b1d; font-style: italic; font-weight: 700;">r</span></dt>
+              <dd>Periodic interest rate, expressed as a decimal (e.g. 5% → 0.05)</dd>
+            </div>
+            <div class="formula-key-row">
+              <dt><span style="color: #0079a6; font-style: italic; font-weight: 700;">n</span></dt>
+              <dd>Number of compounding periods</dd>
+            </div>
+          </dl>
+
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
