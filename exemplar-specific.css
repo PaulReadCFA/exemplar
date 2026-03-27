@@ -133,9 +133,9 @@
   min-height: 4rem;
 }
 
-/* Standalone formula.html — body content is only MathML */
-.formula-equation-only {
-  padding: 2rem 0;
+/* Standalone formula.html — white card matches other explorers; center the equation */
+.formula-equation-card {
+  text-align: center;
 }
 
 /* ---------- Visualization card ---------- */
