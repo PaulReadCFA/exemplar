@@ -32,7 +32,6 @@
             el.tagName === 'MATH' ||
             (el.closest && el.closest('.MathJax'))) {
           el.removeAttribute('tabindex');
-          el.setAttribute('aria-hidden', 'true');
         }
       });
     }
@@ -138,47 +137,58 @@
                 <span class="legend-item" role="listitem">
                   <span class="legend-color" style="background-color: var(--color-blue-interactive);"></span>
                   <span>
-                    <span style="font-style: italic; color: var(--color-blue-interactive);">A</span>
+                    <span class="exemplar-legend-var-a">A</span>
                     =
-                    <span style="font-style: italic; color: var(--color-green-data);">P</span>(1 +
-                    <span style="font-style: italic; color: var(--color-orange-deep);">r</span>)<sup style="font-size: 0.75em; font-style: italic; color: var(--color-teal-data);">n</sup>
+                    <span class="exemplar-legend-var-p">P</span>(1 +
+                    <span class="exemplar-legend-var-r">r</span>)<sup class="exemplar-legend-var-n" style="font-size: 0.75em;">n</sup>
                   </span>
                 </span>
               </div>
             </div>
-            <div class="button-group" role="toolbar" aria-label="Chart or table view">
-              <button type="button" id="view-chart-btn" class="toggle-btn active" aria-pressed="true">Chart</button>
-              <button type="button" id="view-table-btn" class="toggle-btn" aria-pressed="false">Table</button>
+            <div class="button-group" role="toolbar" aria-label="Chart or table view" aria-describedby="view-toggle-help">
+              <button type="button" id="view-chart-btn" class="toggle-btn active" aria-pressed="true"
+                      aria-controls="chart-container">Chart</button>
+              <button type="button" id="view-table-btn" class="toggle-btn" aria-pressed="false"
+                      aria-controls="table-container">Table</button>
             </div>
           </div>
 
-          <p class="text-xs text-gray-500" style="margin-bottom: 0.75rem;">
-            Use <kbd>←</kbd> <kbd>→</kbd> arrow keys to switch views. Table view gives full keyboard access to all values.
+          <p id="view-toggle-help" class="sr-only">
+            Chart and Table act as a single toolbar: only one button is in the tab order at a time. Use Home and End to jump to chart or table, or left and right arrow keys to move between them. In chart view, press Tab again to focus the chart and use arrow keys there to hear each period and amount (same as the hover tooltip). Table lists every value in one place.
           </p>
-          <p id="chart-helper-text" class="text-xs text-gray-500" style="display: none; margin-bottom: 0.75rem;">
+          <p id="chart-helper-text" class="exemplar-chart-helper" style="display: none; margin-bottom: 0.75rem;">
             Chart view is not available at narrow screen widths. Showing table view.
           </p>
 
           <div class="sr-only" aria-live="polite" aria-atomic="true" id="view-announcement"></div>
 
           <p id="chart-accessibility-note" class="sr-only" hidden>
-            This is a visual chart and cannot be navigated by keyboard. Switch to Table view for full access to the data values.
+            This chart can be explored with the keyboard: focus the chart, then use arrow keys to move between periods (tooltip values match mouse hover). For a full list of amounts, use Table view.
           </p>
+          <p id="chart-keyboard-help" class="sr-only">
+            With the chart focused: Left Arrow and Right Arrow move one period; Home and End jump to the first or last period. Values are read aloud while you move.
+          </p>
+
+          <div class="sr-only" aria-live="polite" aria-atomic="true" id="chart-point-announcement"></div>
 
           <div id="chart-container">
             <div id="chart-region" class="chart-wrapper" role="region" aria-labelledby="line-chart-title" tabindex="-1">
               <h4 id="line-chart-title" class="sr-only">Line chart of accumulated amount versus period for the current compound interest inputs</h4>
               <!-- role="img" is required here so aria-label is permitted on the canvas element -->
-              <canvas id="chart" role="img" aria-label="Line chart of amount A versus period n. Use Table view for exact values."></canvas>
+              <canvas id="chart" role="img" tabindex="0"
+                      aria-label="Line chart of amount A versus period n."
+                      aria-describedby="chart-keyboard-help"></canvas>
             </div>
+          </div>
 
-          <div id="table-container" class="table-wrapper table-card-layout" style="display: none;" role="region" tabindex="-1">
+          <div id="table-container" class="table-wrapper table-card-layout exemplar-table-panel" style="display: none;"
+               role="region" tabindex="-1" aria-label="Data table: accumulated amount for each period">
             <table class="data-table" id="data-table" aria-labelledby="table-caption">
               <caption id="table-caption">Accumulated amount per period for A = P(1 + r)^n</caption>
               <thead>
                 <tr>
-                  <th scope="col">Period (<em style="color: var(--color-teal-data);">n</em>)</th>
-                  <th scope="col">Amount (<em style="color: var(--color-blue-interactive);">A</em>)</th>
+                  <th scope="col">Period (<em class="table-th-var-n">n</em>)</th>
+                  <th scope="col">Amount (<em class="table-th-var-a">A</em>)</th>
                 </tr>
               </thead>
               <tbody id="table-body"></tbody>

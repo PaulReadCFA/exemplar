@@ -1,15 +1,17 @@
 # Exemplar Equation Explorer
 
-Reference layout for new **Equation Explorer** calculators. It mirrors how the production explorers are structured so you (and automation) know **what belongs in which file** without guessing.
+Reference layout for new **Equation Explorer** calculators. This folder demonstrates a complete, accessible compound-interest explorer and documents what each file is responsible for.
 
-## File map — write what where
+## File map — what each file is for
 
-| File | Put here |
-|------|-----------|
-| **`index.html`** | Page shell: `<meta>`, title, link to `cfa-base.css` then `*-specific.css`, CDN scripts (MathJax, Chart.js), **noscript** banner, **skip links**, **live regions** (`aria-live`), **card sections** in order: calculator → equation → visualizer (chart/table) → results. Use semantic IDs that match the JS contract (below). |
-| **`cfa-base.css`** | **Do not edit for a single calculator.** Shared design system: `:root` tokens, layout (`.container`, `.card`, `.content`), inputs, tables, toggles, validation summary, skip links, `.force-table` behavior. Refresh this file from the canonical shared copy when updating the design system. |
-| **`*-specific.css`** | **Only** rules for *this* explorer: extra layout, one-off chart heights, domain legend tweaks, new CSS variables for *this* topic’s series (e.g. “coupon” vs “principal”). Prefer `var(--color-…)` from base first. |
-| **`calculator.js`** (or split `modules/` if the app grows) | All **behavior**: parse/validate inputs, compute, update DOM, **MathJax** `Hub.Queue(["Typeset", …])` + tabindex cleanup after render, **Chart.js** create/destroy, chart↔table view, narrow-screen handling, skip-link handlers, debounced input, `aria-pressed` on toggles. |
+| File | Purpose |
+|------|---------|
+| **`index.html`** | Main interactive page. Contains structure and semantics: metadata, stylesheet/script includes, skip links, calculator inputs, dynamic equation mount, chart/table view toggle, table container, results container, and live regions used by JS announcements. |
+| **`calculator.js`** | Main behavior module for `index.html`: input parsing/validation, series computation (`A = P(1 + r)^n`), dynamic MathML rendering + MathJax typesetting, chart/table rendering, view toggle behavior, responsive force-table behavior, skip-link handling, and accessibility announcements. |
+| **`cfa-base.css`** | Shared base design system used across explorers. Includes color tokens, layout primitives, card styles, form controls, table styles, toggle button styles, validation summary styles, skip-link utilities, and responsive table/card behavior. Treat as shared infrastructure, not one-off page styling. |
+| **`exemplar-specific.css`** | Page-specific overrides/extensions for this explorer only: input row layout, equation/visualizer sizing tweaks, results styling, and exemplar-level accessibility/contrast adjustments (for example table-header variable colors and high-zoom table overflow handling). |
+| **`formula.html`** | Standalone page with **only** the typeset equation (no prose, legend, or controls). Same MathJax setup as `index.html`. |
+| **`README.md`** | Usage notes and conventions for copying this exemplar into new calculators. |
 
 ### Why one `calculator.js` here (no `utils.js`, `results.js`, …)
 
@@ -17,13 +19,14 @@ Reference layout for new **Equation Explorer** calculators. It mirrors how the p
 
 **When to split:** multiple models, heavy chart logic, shared validation across files, or anything that makes a single file hard to review — then mirror the dividend layout: thin **`calculator.js`** entry that wires imports and subscriptions, with the same responsibilities moved into named modules.
 
-## HTML ↔ `cfa-base.css` contract
+## HTML/JS contract (important IDs)
 
 These IDs/classes are relied on by **this** `cfa-base.css` (copied from the shared dividend base). If you rename them, update CSS or JS accordingly.
 
 - **Chart / table toggle (narrow screens):** `body.force-table` (set when `window.innerWidth <= 600`), `#view-chart-btn`, `#view-table-btn`, `#chart-container`, `#table-container`.
 - **Validation:** `#validation-summary`, `#validation-list`; summary uses `.validation-summary`, `.validation-title`.
-- **Structure:** `.container` → `main.content` → `.card` → `.card-title`, `.card-content` where needed.
+- **Structure:** `.container` → `main.content` → `.card` → `.card-title`, `.card-content`.
+- **Dynamic mounts:** `#dynamic-mathml-equation`, `#table-body`, `#results-content`, `#view-announcement`, `#calculation-announcement`.
 
 ## Colours — does `cfa-base.css` have them all?
 
@@ -37,13 +40,13 @@ These IDs/classes are relied on by **this** `cfa-base.css` (copied from the shar
 
 1. **Two stylesheets** — `cfa-base.css` + `your-specific.css` (see discussion in repo; base stays portable).
 2. **Inputs first** — calculator card before equation/visualizer (accessibility / SME pattern from existing explorers).
-3. **MathJax** — Use config consistent with siblings (`MML_HTMLorMML` when injecting MathML); strip MathJax `tabindex` and set `aria-hidden` after typeset so focus order stays sane.
+3. **MathJax** — Use config consistent with siblings (`MML_HTMLorMML` when injecting MathML); strip MathJax `tabindex` after typeset so focus order stays sane, but do not hide the math from assistive tech.
 4. **Chart.js** — Destroy the previous instance before creating a new one; respect `prefers-reduced-motion`.
 5. **Live regions** — Polite announcements for calculation/view updates; assertive for validation errors where appropriate.
 
-## Simple model in this exemplar
+## Model used in this exemplar
 
-Linear **y = mx + b**: trivial math on purpose. Replace the compute + MathML + chart/table sections with your domain logic while keeping the same file boundaries and contracts above.
+Compound interest **`A = P(1 + r)^n`**. Replace compute + MathML + chart/table/result rendering with your domain logic while keeping the same file boundaries and accessibility contracts above.
 
 ## For LLMs / codegen
 

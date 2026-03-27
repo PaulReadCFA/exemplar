@@ -28,7 +28,6 @@
             el.tagName === 'MATH' ||
             (el.closest && el.closest('.MathJax'))) {
           el.removeAttribute('tabindex');
-          el.setAttribute('aria-hidden', 'true');
         }
       });
     });
@@ -38,57 +37,26 @@
 <body>
   <div class="container">
     <main>
-      <section class="card" aria-labelledby="formula-title">
-        <h4 class="card-title" id="formula-title">Compound Interest Formula</h4>
-        <div class="card-content">
-
-          <p style="color: var(--color-gray-700); margin-bottom: 1.25rem;">
-            Compound interest is calculated on both the initial principal and the
-            interest accumulated in previous periods. It can be expressed as:
-          </p>
-
-          <div role="region" aria-label="Compound interest formula" style="margin-bottom: 1.5rem;">
-            <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+      <div class="formula-equation-only">
+        <math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+          <mrow>
+            <mi mathcolor="#3c6ae5">A</mi>
+            <mo>=</mo>
+            <mi mathcolor="#15803d">P</mi>
+            <mo>&#x00D7;</mo>
+            <msup>
               <mrow>
-                <mi mathcolor="#3c6ae5">A</mi>
-                <mo>=</mo>
-                <mi mathcolor="#15803d">P</mi>
-                <mo>&#x00D7;</mo>
-                <msup>
-                  <mrow>
-                    <mo>(</mo>
-                    <mn>1</mn>
-                    <mo>+</mo>
-                    <mi mathcolor="#b95b1d">r</mi>
-                    <mo>)</mo>
-                  </mrow>
-                  <mi mathcolor="#0079a6">n</mi>
-                </msup>
+                <mo>(</mo>
+                <mn>1</mn>
+                <mo>+</mo>
+                <mi mathcolor="#b95b1d">r</mi>
+                <mo>)</mo>
               </mrow>
-            </math>
-          </div>
-
-          <dl class="formula-key">
-            <div class="formula-key-row">
-              <dt><span style="color: #3c6ae5; font-style: italic; font-weight: 700;">A</span></dt>
-              <dd>Final accumulated amount</dd>
-            </div>
-            <div class="formula-key-row">
-              <dt><span style="color: #15803d; font-style: italic; font-weight: 700;">P</span></dt>
-              <dd>Principal — the initial amount invested or borrowed</dd>
-            </div>
-            <div class="formula-key-row">
-              <dt><span style="color: #b95b1d; font-style: italic; font-weight: 700;">r</span></dt>
-              <dd>Periodic interest rate, expressed as a decimal (e.g. 5% → 0.05)</dd>
-            </div>
-            <div class="formula-key-row">
-              <dt><span style="color: #0079a6; font-style: italic; font-weight: 700;">n</span></dt>
-              <dd>Number of compounding periods</dd>
-            </div>
-          </dl>
-
-        </div>
-      </section>
+              <mi mathcolor="#0079a6">n</mi>
+            </msup>
+          </mrow>
+        </math>
+      </div>
     </main>
   </div>
 </body>

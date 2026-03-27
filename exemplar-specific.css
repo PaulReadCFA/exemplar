@@ -1,6 +1,68 @@
 /* Compound Interest Explorer — minimal layout tweaks only.
    Shared tokens, cards, inputs, tables, and toggles come from cfa-base.css. */
 
+/* WCAG 2.2 AA: #004b6b / #1a3378 on #e8eaef ≈ 7.9:1 / 9.8:1; on #f3f4f6 both exceed 8:1 (relative luminance). */
+#visualizer .data-table thead th .table-th-var-n {
+  color: #004b6b;
+  font-style: italic;
+}
+
+#visualizer .data-table thead th .table-th-var-a {
+  color: #1a3378;
+  font-style: italic;
+}
+
+/* Slightly darker thead so colored variables and gray-800 labels stay AA on same row */
+#visualizer .data-table thead th {
+  background-color: #e8eaef;
+}
+
+/* High zoom / reflow: allow horizontal scroll instead of clipping wide tables */
+#visualizer .exemplar-table-panel {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+#visualizer .data-table td {
+  overflow-wrap: anywhere;
+}
+
+/* Narrow-width helper — meets ~4.5:1 on white card */
+.exemplar-chart-helper {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--color-gray-700);
+}
+
+/* Legend variable colors on white card (AA against #ffffff) */
+#visualizer .exemplar-legend-var-a {
+  font-style: italic;
+  color: #1a3378;
+}
+
+#visualizer .exemplar-legend-var-p {
+  font-style: italic;
+  color: var(--color-green-data-alt);
+}
+
+#visualizer .exemplar-legend-var-r {
+  font-style: italic;
+  color: var(--color-orange-darker);
+}
+
+#visualizer .exemplar-legend-var-n {
+  font-style: italic;
+  color: #004b6b;
+}
+
+@media (forced-colors: active) {
+  #visualizer .data-table thead th {
+    border-bottom: 2px solid CanvasText;
+  }
+}
+
 /* ---------- Inline input group ---------- */
 .input-group-inline {
   display: flex;
@@ -71,9 +133,19 @@
   min-height: 4rem;
 }
 
+/* Standalone formula.html — body content is only MathML */
+.formula-equation-only {
+  padding: 2rem 0;
+}
+
 /* ---------- Visualization card ---------- */
 #chart-region {
   min-height: 280px;
+}
+
+#chart:focus-visible {
+  outline: 2px solid var(--color-blue-interactive);
+  outline-offset: 2px;
 }
 
 #table-container {

@@ -13,6 +13,8 @@ const state = { view: 'chart' };
 let chartInstance = null;
 /** Last successfully computed series — used when toggling back to chart without a full recalc. */
 let lastGoodSeries = null;
+/** Last keyboard-focused point index (line chart); restored on chart focus. */
+let chartKeyboardIndex = 0;
 
 function $(sel) {
   return document.querySelector(sel);
@@ -58,11 +60,12 @@ function updateFieldError(fieldId, msg) {
   const el = document.getElementById(fieldId);
   if (!el) return;
   const hasError = !!msg;
+  const baseHelpId = 'inputHelp';
+  const errorId = `${fieldId}-error`;
   el.classList.toggle('error', hasError);
   el.setAttribute('aria-invalid', hasError ? 'true' : 'false');
   if (hasError) {
-    const errorId = `${fieldId}-error`;
-    el.setAttribute('aria-describedby', errorId);
+    el.setAttribute('aria-describedby', `${baseHelpId} ${errorId}`);
     let errorEl = document.getElementById(errorId);
     if (!errorEl) {
       errorEl = document.createElement('span');
@@ -73,8 +76,8 @@ function updateFieldError(fieldId, msg) {
     }
     errorEl.textContent = msg;
   } else {
-    el.removeAttribute('aria-describedby');
-    const errorEl = document.getElementById(`${fieldId}-error`);
+    el.setAttribute('aria-describedby', baseHelpId);
+    const errorEl = document.getElementById(errorId);
     if (errorEl) errorEl.remove();
   }
 }
@@ -170,7 +173,7 @@ function setupPrincipalFormatting() {
     const raw = el.value.replace(/,/g, '');
     const n = Number(raw);
     if (raw !== '' && Number.isFinite(n) && n > 0) {
-      el.value = Math.round(n).toLocaleString('en-US');
+      el.value = n.toLocaleString('en-US', { maximumFractionDigits: 20 });
     }
   });
 }
@@ -236,7 +239,6 @@ function cleanMathJaxAccessibility() {
       (el.closest && el.closest('.MathJax'))
     ) {
       el.removeAttribute('tabindex');
-      el.setAttribute('aria-hidden', 'true');
     }
   });
 }
@@ -257,7 +259,102 @@ function renderEquation(P, r, n) {
 
 /* ---------- Chart ---------- */
 
+function teardownChartKeyboardNav(canvas) {
+  if (!canvas || !canvas._exemplarChartKeyNav) return;
+  const { keydown, focusin, blur } = canvas._exemplarChartKeyNav;
+  canvas.removeEventListener('keydown', keydown);
+  canvas.removeEventListener('focusin', focusin);
+  canvas.removeEventListener('blur', blur);
+  delete canvas._exemplarChartKeyNav;
+}
+
+function clearCanvasChartFocus() {
+  const region = $('#chart-point-announcement');
+  if (region) region.textContent = '';
+  if (!chartInstance) return;
+  chartInstance.setActiveElements([]);
+  const tip = chartInstance.tooltip;
+  if (tip && typeof tip.setActiveElements === 'function') {
+    try {
+      tip.setActiveElements([], { x: 0, y: 0 });
+    } catch {
+      /* Chart.js API differences; clearing chart active elements is enough */
+    }
+  }
+  chartInstance.update();
+}
+
+function announceChartPoint(periodLabel, y) {
+  const el = $('#chart-point-announcement');
+  if (!el) return;
+  el.textContent = '';
+  setTimeout(() => {
+    el.textContent = `Period ${periodLabel}, amount A ${fmtCurrency(y)}.`;
+  }, 30);
+}
+
+function activateChartTooltipAtIndex(chart, index) {
+  if (!chart) return;
+  const meta = chart.getDatasetMeta(0);
+  if (!meta || !meta.data || !meta.data[index]) return;
+  const element = meta.data[index];
+  const xy =
+    typeof element.getCenterPoint === 'function'
+      ? element.getCenterPoint()
+      : { x: element.x, y: element.y };
+  const active = [{ datasetIndex: 0, index }];
+  chart.setActiveElements(active);
+  const tip = chart.tooltip;
+  if (tip && typeof tip.setActiveElements === 'function') {
+    tip.setActiveElements(active, xy);
+  }
+  chart.update();
+  chartKeyboardIndex = index;
+  const labels = chart.data.labels;
+  const ys = chart.data.datasets[0].data;
+  announceChartPoint(labels[index], ys[index]);
+}
+
+function setupChartKeyboardNav(canvas) {
+  teardownChartKeyboardNav(canvas);
+
+  const keydown = (e) => {
+    if (!chartInstance) return;
+    const meta = chartInstance.getDatasetMeta(0);
+    const len = meta && meta.data ? meta.data.length : 0;
+    if (!len) return;
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Home' && e.key !== 'End') return;
+    e.preventDefault();
+    const current = chartInstance.getActiveElements();
+    let idx = current.length ? current[0].index : chartKeyboardIndex;
+    if (e.key === 'Home') idx = 0;
+    else if (e.key === 'End') idx = len - 1;
+    else if (e.key === 'ArrowLeft') idx = idx > 0 ? idx - 1 : len - 1;
+    else if (e.key === 'ArrowRight') idx = idx < len - 1 ? idx + 1 : 0;
+    idx = Math.max(0, Math.min(len - 1, idx));
+    activateChartTooltipAtIndex(chartInstance, idx);
+  };
+
+  const focusin = () => {
+    if (!chartInstance) return;
+    const meta = chartInstance.getDatasetMeta(0);
+    const len = meta && meta.data ? meta.data.length : 0;
+    if (!len) return;
+    const idx = Math.min(Math.max(0, chartKeyboardIndex), len - 1);
+    activateChartTooltipAtIndex(chartInstance, idx);
+  };
+
+  const blur = () => clearCanvasChartFocus();
+
+  canvas.addEventListener('keydown', keydown);
+  canvas.addEventListener('focusin', focusin);
+  canvas.addEventListener('blur', blur);
+  canvas._exemplarChartKeyNav = { keydown, focusin, blur };
+}
+
 function destroyChart() {
+  const canvas = $('#chart');
+  teardownChartKeyboardNav(canvas);
   if (chartInstance) {
     chartInstance.destroy();
     chartInstance = null;
@@ -267,6 +364,11 @@ function destroyChart() {
 function renderChart(xs, ys) {
   const canvas = $('#chart');
   if (!canvas) return;
+  if (typeof window.Chart !== 'function') {
+    setView('table');
+    announceView('Table view (chart unavailable)');
+    return;
+  }
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -298,6 +400,10 @@ function renderChart(xs, ys) {
         legend: { display: false },
         tooltip: {
           callbacks: {
+            title(items) {
+              if (!items.length) return '';
+              return `Period (n) = ${items[0].label}`;
+            },
             label(ctx) {
               return `A = ${fmtCurrency(ctx.parsed.y)}`;
             },
@@ -319,6 +425,9 @@ function renderChart(xs, ys) {
       },
     },
   });
+
+  chartKeyboardIndex = 0;
+  setupChartKeyboardNav(canvas);
 }
 
 /* ---------- Table & results ---------- */
@@ -379,6 +488,18 @@ function updateButtonStates() {
   chartBtn.setAttribute('aria-pressed', current === 'chart');
   tableBtn.setAttribute('aria-pressed', current === 'table');
   chartBtn.disabled = isForced;
+
+  // Roving tabindex: one toolbar control in tab order (WAI-ARIA toolbar pattern).
+  if (isForced) {
+    chartBtn.tabIndex = -1;
+    tableBtn.tabIndex = 0;
+  } else if (current === 'chart') {
+    chartBtn.tabIndex = 0;
+    tableBtn.tabIndex = -1;
+  } else {
+    chartBtn.tabIndex = -1;
+    tableBtn.tabIndex = 0;
+  }
 }
 
 function announceView(label) {
@@ -400,14 +521,17 @@ function applyView() {
   const isForced = document.body.classList.contains('force-table');
   const actual = isForced ? 'table' : state.view;
 
+  const canvas = $('#chart');
   if (actual === 'chart' && !isForced) {
     chartWrap.style.display = 'block';
     tableWrap.style.display = 'none';
     if (note) note.hidden = false;
+    if (canvas) canvas.tabIndex = 0;
   } else {
     chartWrap.style.display = 'none';
     tableWrap.style.display = 'block';
     if (note) note.hidden = true;
+    if (canvas) canvas.tabIndex = -1;
     destroyChart();
   }
 }
@@ -550,11 +674,24 @@ function setupViewToggle() {
   [chartBtn, tableBtn].forEach((btn) => {
     if (!btn) return;
     btn.addEventListener('keydown', (e) => {
+      const forced = document.body.classList.contains('force-table');
+      if (e.key === 'Home' && chartBtn && !forced) {
+        e.preventDefault();
+        chartBtn.focus();
+        setView('chart');
+        return;
+      }
+      if (e.key === 'End' && tableBtn) {
+        e.preventDefault();
+        tableBtn.focus();
+        setView('table');
+        return;
+      }
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
         e.preventDefault();
         const next = btn === chartBtn ? tableBtn : chartBtn;
         if (next) next.focus();
-        if (next === chartBtn && !document.body.classList.contains('force-table')) {
+        if (next === chartBtn && !forced) {
           setView('chart');
         } else {
           setView('table');
