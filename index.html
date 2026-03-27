@@ -20,12 +20,15 @@
     MathJax.Hub.Config({
       MathML: { extensions: ["content-mathml.js"] },
       "HTML-CSS": { scale: 95, linebreaks: { automatic: true } },
-      menuSettings: { explorer: false },
+      /* Same as static formula.html: Explorer + AssistiveMML (from MML_HTMLorMML config). */
+      menuSettings: { explorer: true },
       skipStartupTypeset: false
     });
 
     function exemplarRemoveMathJaxTabindex() {
       document.querySelectorAll('[tabindex]').forEach(function (el) {
+        /* Let MathJax a11y control tabindex inside the live-typeset equation. */
+        if (el.closest && el.closest('#dynamic-equation-container')) return;
         if (el.classList.contains('MathJax') ||
             el.classList.contains('MathJax_Display') ||
             (el.id && el.id.indexOf('MathJax-') === 0) ||
@@ -71,7 +74,7 @@
           </p>
 
           <div class="input-section">
-            <p class="sr-only" id="inputHelp">Enter principal, annual rate as a percentage, and number of periods. Values must stay within the allowed ranges.</p>
+            <p class="sr-only" id="inputHelp">Enter principal (digits only; commas optional), annual rate as a percentage, and number of periods (whole number). Values must stay within the allowed ranges. Monetary amounts are shown as USD prefixed to the number with no space (for example USD1,234.56); screen readers use the word dollars for those values.</p>
 
             <div class="input-group-inline">
               <div class="input-inline">
@@ -81,7 +84,8 @@
                 <div class="input-with-suffix-inline">
                   <input type="text" id="principal" class="input-field-inline input-field-wide"
                          inputmode="numeric" autocomplete="off" value="1,000"
-                         aria-describedby="inputHelp" aria-required="true">
+                         aria-describedby="inputHelp" aria-required="true"
+                         pattern="[0-9,]*" title="Digits and commas only">
                 </div>
               </div>
 

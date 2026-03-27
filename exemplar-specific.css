@@ -152,6 +152,37 @@
   margin-top: 0.5rem;
 }
 
+/* Tighter table density (desktop + stacked card rows) */
+#visualizer .data-table thead th,
+#visualizer .data-table tbody td {
+  padding: 0.35rem 0.55rem;
+}
+
+@media (max-width: 768px) {
+  #visualizer .table-card-layout .data-table tbody {
+    gap: 0.35rem;
+  }
+
+  #visualizer .table-card-layout .data-table tr {
+    padding: 0.4rem;
+    margin-bottom: 0.4rem;
+  }
+
+  #visualizer .table-card-layout .data-table td[data-label]:not(:first-child) {
+    padding: 0.28rem 0.45rem;
+  }
+}
+
+/* Validation jump links: default underline (not colour alone) */
+.validation-summary a.validation-error-link {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.validation-summary a.validation-error-link:hover {
+  text-decoration-thickness: 2px;
+}
+
 /* ---------- Formula key (variable legend below equation) ---------- */
 .formula-key {
   display: flex;

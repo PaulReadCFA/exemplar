@@ -28,6 +28,18 @@ function debounce(fn, ms) {
   };
 }
 
+/**
+ * JS equivalent of CSS `prefers-reduced-motion: reduce` (same user preference, readable from script).
+ * Use for canvas APIs (Chart.js) that do not consult CSS media queries on their own.
+ */
+function reducedMotionPreferred() {
+  try {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+}
+
 /* ---------- Validation (pattern from production explorers) ---------- */
 
 const RULES = {
@@ -159,9 +171,39 @@ function formatPrincipalDisplay(raw) {
   return Math.round(n).toLocaleString('en-US');
 }
 
+function filterPrincipalValue(raw) {
+  return raw.replace(/[^\d,]/g, '');
+}
+
 function setupPrincipalFormatting() {
   const el = document.getElementById('principal');
   if (!el) return;
+
+  const onPrincipalChange = () => {
+    const cleaned = filterPrincipalValue(el.value);
+    if (cleaned !== el.value) {
+      const pos = Math.min(el.selectionStart ?? cleaned.length, cleaned.length);
+      el.value = cleaned;
+      el.setSelectionRange?.(pos, pos);
+    }
+  };
+
+  // Digits and comma only (comma formatting on blur).
+  el.addEventListener('beforeinput', (e) => {
+    if (e.inputType !== 'insertText' || !e.data) return;
+    if (e.data.replace(/[\d,]/g, '').length) e.preventDefault();
+  });
+  el.addEventListener('input', onPrincipalChange);
+  el.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const pasted = (e.clipboardData?.getData('text') || '').replace(/[^\d,]/g, '');
+    const start = el.selectionStart ?? 0;
+    const end = el.selectionEnd ?? 0;
+    el.value = el.value.slice(0, start) + pasted + el.value.slice(end);
+    onPrincipalChange();
+    const caret = start + pasted.length;
+    el.setSelectionRange?.(caret, caret);
+  });
 
   // On focus: strip commas so the user edits a plain number.
   el.addEventListener('focus', () => {
@@ -176,6 +218,74 @@ function setupPrincipalFormatting() {
       el.value = n.toLocaleString('en-US', { maximumFractionDigits: 20 });
     }
   });
+}
+
+function setupNumberOnlyFields() {
+  const blockExprChars = (e) => {
+    if (e.key === 'e' || e.key === 'E' || e.key === '+' || e.key === '-') e.preventDefault();
+  };
+  const rate = document.getElementById('rate');
+  const periods = document.getElementById('periods');
+  if (rate) rate.addEventListener('keydown', blockExprChars);
+  if (periods) periods.addEventListener('keydown', blockExprChars);
+
+  const filterPeriods = () => {
+    if (!periods) return;
+    const cleaned = periods.value.replace(/[^\d]/g, '');
+    if (cleaned !== periods.value) {
+      const pos = Math.min(periods.selectionStart ?? cleaned.length, cleaned.length);
+      periods.value = cleaned;
+      periods.setSelectionRange?.(pos, pos);
+    }
+  };
+  if (periods) {
+    periods.addEventListener('beforeinput', (e) => {
+      if (e.inputType !== 'insertText' || !e.data) return;
+      if (/\D/.test(e.data)) e.preventDefault();
+    });
+    periods.addEventListener('input', filterPeriods);
+    periods.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pasted = (e.clipboardData?.getData('text') || '').replace(/\D/g, '');
+      const start = periods.selectionStart ?? 0;
+      const end = periods.selectionEnd ?? 0;
+      periods.value = periods.value.slice(0, start) + pasted + periods.value.slice(end);
+      filterPeriods();
+      const caret = start + pasted.length;
+      periods.setSelectionRange?.(caret, caret);
+    });
+  }
+
+  const filterRate = () => {
+    if (!rate) return;
+    let v = rate.value.replace(/[^\d.]/g, '');
+    const firstDot = v.indexOf('.');
+    if (firstDot !== -1) {
+      v = v.slice(0, firstDot + 1) + v.slice(firstDot + 1).replace(/\./g, '');
+    }
+    if (v !== rate.value) {
+      const pos = Math.min(rate.selectionStart ?? v.length, v.length);
+      rate.value = v;
+      rate.setSelectionRange?.(pos, pos);
+    }
+  };
+  if (rate) {
+    rate.addEventListener('beforeinput', (e) => {
+      if (e.inputType !== 'insertText' || !e.data) return;
+      if (e.data.replace(/[\d.]/g, '').length) e.preventDefault();
+    });
+    rate.addEventListener('input', filterRate);
+    rate.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pasted = (e.clipboardData?.getData('text') || '').replace(/[^\d.]/g, '');
+      const start = rate.selectionStart ?? 0;
+      const end = rate.selectionEnd ?? 0;
+      rate.value = rate.value.slice(0, start) + pasted + rate.value.slice(end);
+      filterRate();
+      const caret = start + pasted.length;
+      rate.setSelectionRange?.(caret, caret);
+    });
+  }
 }
 
 /**
@@ -195,10 +305,20 @@ function computeSeries(P, r, n) {
   return { xs, ys };
 }
 
-/** Format a value as currency (2 dp, thousands-separated). */
-function fmtCurrency(v) {
+/** Plain amount with separators (no currency suffix). */
+function fmtMoneyAmount(v) {
   if (!Number.isFinite(v)) return '0.00';
   return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/** Visible: `USD1,234.56` (no space; prefix). */
+function fmtMoneyVisual(v) {
+  return `USD${fmtMoneyAmount(v)}`;
+}
+
+/** Spoken-friendly for aria-label and live regions (not “U-S-D”). */
+function fmtMoneySpeech(v) {
+  return `${fmtMoneyAmount(v)} dollars`;
 }
 
 /** Format the rate percentage as its decimal equivalent, stripping trailing zeros. */
@@ -231,6 +351,7 @@ function buildMathML(P, r, n) {
 
 function cleanMathJaxAccessibility() {
   document.querySelectorAll('[tabindex]').forEach((el) => {
+    if (el.closest && el.closest('#dynamic-equation-container')) return;
     if (
       el.classList.contains('MathJax') ||
       el.classList.contains('MathJax_Display') ||
@@ -289,7 +410,7 @@ function announceChartPoint(periodLabel, y) {
   if (!el) return;
   el.textContent = '';
   setTimeout(() => {
-    el.textContent = `Period ${periodLabel}, amount A ${fmtCurrency(y)}.`;
+    el.textContent = `Period ${periodLabel}, amount A ${fmtMoneySpeech(y)}.`;
   }, 30);
 }
 
@@ -370,7 +491,7 @@ function renderChart(xs, ys) {
     return;
   }
 
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduceMotion = reducedMotionPreferred();
 
   destroyChart();
   const ctx = canvas.getContext('2d');
@@ -394,18 +515,41 @@ function renderChart(xs, ys) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: prefersReducedMotion ? false : undefined,
+      animation: reduceMotion ? false : undefined,
+      /* Hover / show-hide without easing when reduced motion is requested */
+      transitions: reduceMotion
+        ? {
+            active: { animation: { duration: 0 } },
+            show: { animation: { duration: 0 } },
+            hide: { animation: { duration: 0 } },
+            resize: { animation: { duration: 0 } },
+          }
+        : undefined,
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
         tooltip: {
+          animation: reduceMotion ? false : undefined,
+          /* Match legend variable A (#1a3378), not the pale series fill colour */
+          backgroundColor: '#ffffff',
+          titleColor: '#1f2937',
+          bodyColor: '#1a3378',
+          borderColor: '#e5e7eb',
+          borderWidth: 1,
+          displayColors: true,
           callbacks: {
+            labelColor() {
+              return { borderColor: '#1a3378', backgroundColor: '#1a3378' };
+            },
+            labelTextColor() {
+              return '#1a3378';
+            },
             title(items) {
               if (!items.length) return '';
               return `Period (n) = ${items[0].label}`;
             },
             label(ctx) {
-              return `A = ${fmtCurrency(ctx.parsed.y)}`;
+              return `A = ${fmtMoneyVisual(ctx.parsed.y)}`;
             },
           },
         },
@@ -419,7 +563,7 @@ function renderChart(xs, ys) {
           title: { display: true, text: 'Amount (A)' },
           grid: { color: 'rgba(0,0,0,0.06)' },
           ticks: {
-            callback: (v) => fmtCurrency(v),
+            callback: (v) => fmtMoneyVisual(v),
           },
         },
       },
@@ -428,6 +572,26 @@ function renderChart(xs, ys) {
 
   chartKeyboardIndex = 0;
   setupChartKeyboardNav(canvas);
+}
+
+/** Rebuild chart when the user toggles “reduce motion” in the OS so tooltip/popup behaviour updates without reload. */
+function setupReducedMotionMediaListener() {
+  let mq;
+  try {
+    mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  } catch {
+    return;
+  }
+  const rerenderChartIfVisible = () => {
+    const forced = document.body.classList.contains('force-table');
+    if (forced || state.view !== 'chart' || !lastGoodSeries || typeof window.Chart !== 'function') return;
+    renderChart(lastGoodSeries.xs, lastGoodSeries.ys);
+  };
+  if (typeof mq.addEventListener === 'function') {
+    mq.addEventListener('change', rerenderChartIfVisible);
+  } else if (typeof mq.addListener === 'function') {
+    mq.addListener(rerenderChartIfVisible);
+  }
 }
 
 /* ---------- Table & results ---------- */
@@ -440,7 +604,7 @@ function renderTable(xs, ys) {
       const y = ys[i];
       return `<tr>
         <td data-label="Period (n)">${x}</td>
-        <td data-label="Amount (A)">${fmtCurrency(y)}</td>
+        <td data-label="Amount (A)" aria-label="${fmtMoneySpeech(y)}">${fmtMoneyVisual(y)}</td>
       </tr>`;
     })
     .join('');
@@ -456,11 +620,11 @@ function renderResults(P, r, n, ys) {
   root.innerHTML = `
     <div class="exemplar-result-block">
       <span class="label">Final amount after ${n} period${n === 1 ? '' : 's'}</span>
-      <span class="value">${fmtCurrency(A)}</span>
+      <span class="value" aria-label="${fmtMoneySpeech(A)}">${fmtMoneyVisual(A)}</span>
     </div>
     <div class="exemplar-result-block">
       <span class="label">Interest earned</span>
-      <span class="value">${fmtCurrency(interest)}</span>
+      <span class="value" aria-label="${fmtMoneySpeech(interest)}">${fmtMoneyVisual(interest)}</span>
     </div>
     <div class="exemplar-result-block">
       <span class="label">Growth multiple</span>
@@ -714,9 +878,11 @@ function init() {
   window.addEventListener('resize', debounce(detectNarrowScreen, 200));
 
   setupPrincipalFormatting();
+  setupNumberOnlyFields();
   setupInputs();
   setupViewToggle();
   setupSkipLinks();
+  setupReducedMotionMediaListener();
   refreshAll();
 }
 

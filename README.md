@@ -40,8 +40,8 @@ These IDs/classes are relied on by **this** `cfa-base.css` (copied from the shar
 
 1. **Two stylesheets** — `cfa-base.css` + `your-specific.css` (see discussion in repo; base stays portable).
 2. **Inputs first** — calculator card before equation/visualizer (accessibility / SME pattern from existing explorers).
-3. **MathJax** — Use config consistent with siblings (`MML_HTMLorMML` when injecting MathML); strip MathJax `tabindex` after typeset so focus order stays sane, but do not hide the math from assistive tech.
-4. **Chart.js** — Destroy the previous instance before creating a new one; respect `prefers-reduced-motion`.
+3. **MathJax** — Use config consistent with siblings (`MML_HTMLorMML` when injecting MathML); enable `menuSettings.explorer: true` so the accessibility menu / Explorer matches the bundled `accessibility-menu.js`. After typeset, strip stray MathJax `tabindex` **outside** the live equation container only (`#dynamic-equation-container`), so Explorer can manage focus inside the dynamic math.
+4. **Chart.js** — Destroy the previous instance before creating a new one. Respect reduced motion via **`matchMedia('(prefers-reduced-motion: reduce)')`** in JS (canvas does not read CSS `@media`): disable chart `animation`, shorten `transitions`, set `plugins.tooltip.animation` off, and optionally re-render when the media query changes.
 5. **Live regions** — Polite announcements for calculation/view updates; assertive for validation errors where appropriate.
 
 ## Model used in this exemplar

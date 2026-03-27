@@ -16,12 +16,13 @@
     MathJax.Hub.Config({
       MathML: { extensions: ["content-mathml.js"] },
       "HTML-CSS": { scale: 95, linebreaks: { automatic: true } },
-      menuSettings: { explorer: false },
+      menuSettings: { explorer: true },
       skipStartupTypeset: false
     });
 
     MathJax.Hub.Register.StartupHook("End", function () {
       document.querySelectorAll('[tabindex]').forEach(function (el) {
+        if (el.closest && el.closest('.formula-equation-card')) return;
         if (el.classList.contains('MathJax') ||
             el.classList.contains('MathJax_Display') ||
             (el.id && el.id.indexOf('MathJax-') === 0) ||
