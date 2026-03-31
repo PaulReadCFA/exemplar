@@ -2,7 +2,7 @@
  * Compound Interest Explorer — reference implementation consolidating common Equation Explorer patterns:
  * validation summary with in-page links, debounced input, MathJax typeset + tabindex cleanup,
  * Chart.js with reduced-motion handling, chart/table toggle (incl. narrow-width force-table),
- * skip links, a polite live region for view changes, and an on-demand results summary for screen readers.
+ * skip links and polite live regions for view/results updates.
  *
  * Formula: A = P × (1 + r)^n
  *   P = principal, r = periodic rate (decimal), n = number of periods
@@ -620,19 +620,6 @@ function renderTable(xs, ys) {
     .join('');
 }
 
-/** Spoken summary for the Results card (used when the user explicitly requests it). */
-function buildResultsSpokenSummary(P, r, n, ys) {
-  const A = ys[ys.length - 1];
-  const interest = A - P;
-  const multiple = A / P;
-  const pct = ((multiple - 1) * 100).toFixed(2);
-  return (
-    `Final amount after ${n} period${n === 1 ? '' : 's'}: ${fmtMoneySpeech(A)}. ` +
-    `Interest earned: ${fmtMoneySpeech(interest)}. ` +
-    `Growth multiple: ${multiple.toFixed(4)} times. Total return: ${pct} percent.`
-  );
-}
-
 function renderResults(P, r, n, ys) {
   const root = $('#results-content');
   if (!root) return;
@@ -803,31 +790,16 @@ function setupSkipLinks() {
   });
 }
 
-/* ---------- Live region: results summary on demand ---------- */
+/* ---------- Live region: compact results update ---------- */
 
-function announceResultsOnDemand() {
+const announceCalculation = debounce(() => {
   const region = $('#calculation-announcement');
   if (!region) return;
-  const raw = readInputs();
-  const errors = validateAll(raw);
-  let msg;
-  if (hasErrors(errors)) {
-    msg = 'Results are not available until the inputs are valid.';
-  } else {
-    const { principal: P, rate: r, periods: n } = raw;
-    const { ys } = computeSeries(P, r, n);
-    msg = buildResultsSpokenSummary(P, r, n, ys);
-  }
   region.textContent = '';
   setTimeout(() => {
-    region.textContent = msg;
+    region.textContent = 'Results updated. Check the Results section for current values.';
   }, 50);
-}
-
-function setupAnnounceResultsButton() {
-  const btn = $('#announce-results-btn');
-  if (btn) btn.addEventListener('click', announceResultsOnDemand);
-}
+}, 1200);
 
 /* ---------- Main update ---------- */
 
@@ -861,6 +833,7 @@ function refreshAll() {
   if (showChart) {
     renderChart(xs, ys);
   }
+  announceCalculation();
 }
 
 const onInput = debounce(refreshAll, 250);
@@ -939,7 +912,6 @@ function init() {
   setupViewToggle();
   setupSkipLinks();
   setupReducedMotionMediaListener();
-  setupAnnounceResultsButton();
   refreshAll();
 }
 
