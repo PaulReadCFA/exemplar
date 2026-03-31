@@ -2,7 +2,7 @@
  * Compound Interest Explorer — reference implementation consolidating common Equation Explorer patterns:
  * validation summary with in-page links, debounced input, MathJax typeset + tabindex cleanup,
  * Chart.js with reduced-motion handling, chart/table toggle (incl. narrow-width force-table),
- * skip links, and polite live regions for view and calculation updates.
+ * skip links, a polite live region for view changes, and an on-demand results summary for screen readers.
  *
  * Formula: A = P × (1 + r)^n
  *   P = principal, r = periodic rate (decimal), n = number of periods
@@ -407,7 +407,7 @@ function clearCanvasChartFocus() {
 
 function announceChartPoint(periodLabel, y) {
   const el = $('#chart-point-announcement');
-  if (!el) return;
+  if (!el || el.getAttribute('aria-hidden') === 'true') return;
   el.textContent = '';
   setTimeout(() => {
     el.textContent = `Period ${periodLabel}, amount A ${fmtMoneySpeech(y)}.`;
@@ -556,15 +556,25 @@ function renderChart(xs, ys) {
       },
       scales: {
         x: {
-          title: { display: true, text: 'Period (n)' },
+          title: {
+            display: true,
+            text: 'Period (n)',
+            color: '#1f2937',
+          },
+          ticks: { color: '#374151' },
           grid: { color: 'rgba(0,0,0,0.06)' },
         },
         y: {
-          title: { display: true, text: 'Amount (A)' },
-          grid: { color: 'rgba(0,0,0,0.06)' },
-          ticks: {
-            callback: (v) => fmtMoneyVisual(v),
+          title: {
+            display: true,
+            text: 'Amount (A), USD',
+            color: '#1f2937',
           },
+          ticks: {
+            color: '#374151',
+            callback: (v) => fmtMoneyAmount(v),
+          },
+          grid: { color: 'rgba(0,0,0,0.06)' },
         },
       },
     },
@@ -604,10 +614,23 @@ function renderTable(xs, ys) {
       const y = ys[i];
       return `<tr>
         <td data-label="Period (n)">${x}</td>
-        <td data-label="Amount (A)" aria-label="${fmtMoneySpeech(y)}">${fmtMoneyVisual(y)}</td>
+        <td data-label="Amount (A), USD" aria-label="${fmtMoneySpeech(y)}">${fmtMoneyAmount(y)}</td>
       </tr>`;
     })
     .join('');
+}
+
+/** Spoken summary for the Results card (used when the user explicitly requests it). */
+function buildResultsSpokenSummary(P, r, n, ys) {
+  const A = ys[ys.length - 1];
+  const interest = A - P;
+  const multiple = A / P;
+  const pct = ((multiple - 1) * 100).toFixed(2);
+  return (
+    `Final amount after ${n} period${n === 1 ? '' : 's'}: ${fmtMoneySpeech(A)}. ` +
+    `Interest earned: ${fmtMoneySpeech(interest)}. ` +
+    `Growth multiple: ${multiple.toFixed(4)} times. Total return: ${pct} percent.`
+  );
 }
 
 function renderResults(P, r, n, ys) {
@@ -618,22 +641,22 @@ function renderResults(P, r, n, ys) {
   const multiple = A / P;
 
   root.innerHTML = `
-    <div class="exemplar-result-block">
+    <p class="exemplar-result-block">
       <span class="label">Final amount after ${n} period${n === 1 ? '' : 's'}</span>
       <span class="value" aria-label="${fmtMoneySpeech(A)}">${fmtMoneyVisual(A)}</span>
-    </div>
-    <div class="exemplar-result-block">
+    </p>
+    <p class="exemplar-result-block">
       <span class="label">Interest earned</span>
       <span class="value" aria-label="${fmtMoneySpeech(interest)}">${fmtMoneyVisual(interest)}</span>
-    </div>
-    <div class="exemplar-result-block">
+    </p>
+    <p class="exemplar-result-block">
       <span class="label">Growth multiple</span>
       <span class="value">${multiple.toFixed(4)}×</span>
-    </div>
-    <div class="exemplar-result-block">
+    </p>
+    <p class="exemplar-result-block">
       <span class="label">Total return</span>
       <span class="value">${((multiple - 1) * 100).toFixed(2)}%</span>
-    </div>
+    </p>
   `;
 }
 
@@ -680,6 +703,8 @@ function applyView() {
   const chartWrap = $('#chart-container');
   const tableWrap = $('#table-container');
   const note = $('#chart-accessibility-note');
+  const chartPointLive = $('#chart-point-announcement');
+  const chartKbHelp = $('#chart-keyboard-help');
   if (!chartWrap || !tableWrap) return;
 
   const isForced = document.body.classList.contains('force-table');
@@ -689,11 +714,25 @@ function applyView() {
   if (actual === 'chart' && !isForced) {
     chartWrap.style.display = 'block';
     tableWrap.style.display = 'none';
+    chartWrap.removeAttribute('aria-hidden');
+    tableWrap.setAttribute('aria-hidden', 'true');
+    if (chartPointLive) {
+      chartPointLive.textContent = '';
+      chartPointLive.removeAttribute('aria-hidden');
+    }
+    if (chartKbHelp) chartKbHelp.removeAttribute('aria-hidden');
     if (note) note.hidden = false;
     if (canvas) canvas.tabIndex = 0;
   } else {
     chartWrap.style.display = 'none';
     tableWrap.style.display = 'block';
+    chartWrap.setAttribute('aria-hidden', 'true');
+    tableWrap.removeAttribute('aria-hidden');
+    if (chartPointLive) {
+      chartPointLive.textContent = '';
+      chartPointLive.setAttribute('aria-hidden', 'true');
+    }
+    if (chartKbHelp) chartKbHelp.setAttribute('aria-hidden', 'true');
     if (note) note.hidden = true;
     if (canvas) canvas.tabIndex = -1;
     destroyChart();
@@ -707,7 +746,11 @@ function setView(view) {
   state.view = view;
   updateButtonStates();
   applyView();
-  announceView(view === 'chart' ? 'Chart view' : 'Table view');
+  announceView(
+    view === 'chart'
+      ? 'Chart view. Data table is hidden.'
+      : 'Table view. Chart and chart announcements are hidden.',
+  );
 
   const isForced = document.body.classList.contains('force-table');
   if (!isForced && state.view === 'chart' && lastGoodSeries) {
@@ -760,16 +803,31 @@ function setupSkipLinks() {
   });
 }
 
-/* ---------- Live region: calculation updated ---------- */
+/* ---------- Live region: results summary on demand ---------- */
 
-const announceCalculation = debounce(() => {
+function announceResultsOnDemand() {
   const region = $('#calculation-announcement');
   if (!region) return;
+  const raw = readInputs();
+  const errors = validateAll(raw);
+  let msg;
+  if (hasErrors(errors)) {
+    msg = 'Results are not available until the inputs are valid.';
+  } else {
+    const { principal: P, rate: r, periods: n } = raw;
+    const { ys } = computeSeries(P, r, n);
+    msg = buildResultsSpokenSummary(P, r, n, ys);
+  }
   region.textContent = '';
   setTimeout(() => {
-    region.textContent = 'Results updated.';
+    region.textContent = msg;
   }, 50);
-}, 800);
+}
+
+function setupAnnounceResultsButton() {
+  const btn = $('#announce-results-btn');
+  if (btn) btn.addEventListener('click', announceResultsOnDemand);
+}
 
 /* ---------- Main update ---------- */
 
@@ -803,8 +861,6 @@ function refreshAll() {
   if (showChart) {
     renderChart(xs, ys);
   }
-
-  announceCalculation();
 }
 
 const onInput = debounce(refreshAll, 250);
@@ -883,6 +939,7 @@ function init() {
   setupViewToggle();
   setupSkipLinks();
   setupReducedMotionMediaListener();
+  setupAnnounceResultsButton();
   refreshAll();
 }
 

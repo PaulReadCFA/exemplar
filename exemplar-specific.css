@@ -221,6 +221,7 @@
 }
 
 .exemplar-result-block {
+  margin: 0;
   padding: 1rem;
   background: var(--color-gray-50);
   border: 1px solid var(--color-gray-200);

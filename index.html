@@ -186,13 +186,14 @@
           </div>
 
           <div id="table-container" class="table-wrapper table-card-layout exemplar-table-panel" style="display: none;"
-               role="region" tabindex="-1" aria-label="Data table: accumulated amount for each period">
+               role="region" tabindex="-1" aria-hidden="true"
+               aria-label="Data table: accumulated amount for each period">
             <table class="data-table" id="data-table" aria-labelledby="table-caption">
-              <caption id="table-caption">Accumulated amount per period for A = P(1 + r)^n</caption>
+              <caption id="table-caption">Accumulated amount in USD per period for A = P(1 + r)^n</caption>
               <thead>
                 <tr>
                   <th scope="col">Period (<em class="table-th-var-n">n</em>)</th>
-                  <th scope="col">Amount (<em class="table-th-var-a">A</em>)</th>
+                  <th scope="col">Amount (<em class="table-th-var-a">A</em>, USD)</th>
                 </tr>
               </thead>
               <tbody id="table-body"></tbody>
@@ -205,6 +206,12 @@
         <h4 class="card-title" id="results-title">Results</h4>
         <div class="card-content">
           <div id="calculation-announcement" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+          <p class="sr-only">
+            <button type="button" id="announce-results-btn" class="sr-only"
+                    aria-controls="calculation-announcement">
+              Hear results summary
+            </button>
+          </p>
           <div id="results-content" class="exemplar-results">
             <!-- Populated by calculator.js -->
           </div>
