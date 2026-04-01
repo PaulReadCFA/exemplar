@@ -10,6 +10,18 @@
 
 const state = { view: 'chart' };
 
+/**
+ * Chart/MathML literals must match :root tokens in cfa-base.css (v3).
+ * Chart.js cannot use CSS variables directly; update these when design tokens change.
+ */
+const PALETTE = {
+  blueInteractive: '#3C6AE5', // --color-blue-interactive / --var-2
+  gray800: '#1F2937', // --color-gray-800
+  gray700: '#374151', // --color-gray-700
+  gray200: '#E5E7EB', // --color-gray-200
+  surfaceCard: '#FFFFFF', // --surface-card
+};
+
 let chartInstance = null;
 /** Last successfully computed series — used when toggling back to chart without a full recalc. */
 let lastGoodSeries = null;
@@ -332,19 +344,19 @@ function buildMathML(P, r, n) {
   const pStr = P.toLocaleString('en-US');
   const rStr = fmtRateDecimal(r);
   return `<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
-    <mi mathcolor="#3c6ae5">A</mi>
+    <mi mathcolor="#3C6AE5">A</mi>
     <mo>=</mo>
-    <mn mathcolor="#15803d">${pStr}</mn>
+    <mn mathcolor="#07514F">${pStr}</mn>
     <mo>&#x00D7;</mo>
     <msup>
       <mrow>
         <mo>(</mo>
         <mn>1</mn>
         <mo>+</mo>
-        <mn mathcolor="#b95b1d">${rStr}</mn>
+        <mn mathcolor="#B95B1D">${rStr}</mn>
         <mo>)</mo>
       </mrow>
-      <mn mathcolor="#0079a6">${n}</mn>
+      <mn mathcolor="#0079A6">${n}</mn>
     </msup>
   </mrow></math>`;
 }
@@ -503,7 +515,8 @@ function renderChart(xs, ys) {
         {
           label: 'Amount (A)',
           data: ys,
-          borderColor: '#3c6ae5',
+          borderColor: PALETTE.blueInteractive,
+          /* 12% tint of --var-2 (#3C6AE5 → 60,106,229) */
           backgroundColor: 'rgba(60, 106, 229, 0.12)',
           fill: true,
           tension: 0.3,
@@ -530,19 +543,21 @@ function renderChart(xs, ys) {
         legend: { display: false },
         tooltip: {
           animation: reduceMotion ? false : undefined,
-          /* Match legend variable A (#1a3378), not the pale series fill colour */
-          backgroundColor: '#ffffff',
-          titleColor: '#1f2937',
-          bodyColor: '#1a3378',
-          borderColor: '#e5e7eb',
+          backgroundColor: PALETTE.surfaceCard,
+          titleColor: PALETTE.gray800,
+          bodyColor: PALETTE.blueInteractive,
+          borderColor: PALETTE.gray200,
           borderWidth: 1,
           displayColors: true,
           callbacks: {
             labelColor() {
-              return { borderColor: '#1a3378', backgroundColor: '#1a3378' };
+              return {
+                borderColor: PALETTE.blueInteractive,
+                backgroundColor: PALETTE.blueInteractive,
+              };
             },
             labelTextColor() {
-              return '#1a3378';
+              return PALETTE.surfaceCard;
             },
             title(items) {
               if (!items.length) return '';
@@ -559,19 +574,19 @@ function renderChart(xs, ys) {
           title: {
             display: true,
             text: 'Period (n)',
-            color: '#1f2937',
+            color: PALETTE.gray800,
           },
-          ticks: { color: '#374151' },
+          ticks: { color: PALETTE.gray700 },
           grid: { color: 'rgba(0,0,0,0.06)' },
         },
         y: {
           title: {
             display: true,
             text: 'Amount (A), USD',
-            color: '#1f2937',
+            color: PALETTE.gray800,
           },
           ticks: {
-            color: '#374151',
+            color: PALETTE.gray700,
             callback: (v) => fmtMoneyAmount(v),
           },
           grid: { color: 'rgba(0,0,0,0.06)' },
@@ -614,7 +629,10 @@ function renderTable(xs, ys) {
       const y = ys[i];
       return `<tr>
         <td data-label="Period (n)">${x}</td>
-        <td data-label="Amount (A), USD" aria-label="${fmtMoneySpeech(y)}">${fmtMoneyAmount(y)}</td>
+        <td data-label="Amount (A), USD">
+          <span class="sr-only">${fmtMoneySpeech(y)}</span>
+          <span aria-hidden="true">${fmtMoneyAmount(y)}</span>
+        </td>
       </tr>`;
     })
     .join('');
@@ -630,11 +648,17 @@ function renderResults(P, r, n, ys) {
   root.innerHTML = `
     <p class="exemplar-result-block">
       <span class="label">Final amount after ${n} period${n === 1 ? '' : 's'}</span>
-      <span class="value" aria-label="${fmtMoneySpeech(A)}">${fmtMoneyVisual(A)}</span>
+      <span class="value">
+        <span class="sr-only">${fmtMoneySpeech(A)}</span>
+        <span class="exemplar-result-value-visual" aria-hidden="true">${fmtMoneyVisual(A)}</span>
+      </span>
     </p>
     <p class="exemplar-result-block">
       <span class="label">Interest earned</span>
-      <span class="value" aria-label="${fmtMoneySpeech(interest)}">${fmtMoneyVisual(interest)}</span>
+      <span class="value">
+        <span class="sr-only">${fmtMoneySpeech(interest)}</span>
+        <span class="exemplar-result-value-visual" aria-hidden="true">${fmtMoneyVisual(interest)}</span>
+      </span>
     </p>
     <p class="exemplar-result-block">
       <span class="label">Growth multiple</span>

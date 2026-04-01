@@ -50,9 +50,9 @@
 </head>
 <body>
   <noscript>
-    <div style="padding: 2rem; background: #fef2f2; border: 2px solid #b91c1c; border-radius: 0.5rem; margin: 2rem; text-align: center;">
-      <h2 style="color: #991b1c; margin-bottom: 1rem;">JavaScript Required</h2>
-      <p style="color: #374151; font-size: 1.125rem;">
+    <div class="exemplar-noscript-fallback">
+      <h2>JavaScript Required</h2>
+      <p>
         This explorer requires JavaScript for calculations, the chart, and dynamic equations.
       </p>
     </div>
@@ -69,12 +69,12 @@
       <section class="card" id="calculator" tabindex="-1" aria-labelledby="calculator-title">
         <h4 class="card-title" id="calculator-title">Compound Interest Formula</h4>
         <div class="card-content">
-          <p class="input-instructions" style="color: var(--color-gray-600); margin-bottom: 1rem;">
-            Adjust the principal, annual rate, and number of periods. The equation, chart, and table update automatically. The rate is entered as a percentage (e.g. 5 for 5%); it is divided by 100 in the formula.
+          <p class="input-instructions exemplar-input-intro">
+            Adjust the principal, annual rate, and number of periods. The equation, chart, and table update automatically. Principal: digits only, commas optional. The rate is entered as a percentage (e.g. 5 for 5%); it is divided by 100 in the formula.
           </p>
 
           <div class="input-section">
-            <p class="sr-only" id="inputHelp">Enter principal (digits only; commas optional), annual rate as a percentage, and number of periods (whole number). Values must stay within the allowed ranges. Monetary amounts are shown as USD prefixed to the number with no space (for example USD1,234.56); screen readers use the word dollars for those values.</p>
+            <p class="sr-only" id="inputHelp">Enter principal as digits only with optional commas (no other characters), annual rate as a percentage, and number of periods as a whole number. Values must stay within the allowed ranges. Monetary amounts are shown as USD prefixed to the number with no space (for example USD1,234.56); screen readers use the word dollars for those values.</p>
 
             <div class="input-group-inline">
               <div class="input-inline">
@@ -84,8 +84,7 @@
                 <div class="input-with-suffix-inline">
                   <input type="text" id="principal" class="input-field-inline input-field-wide"
                          inputmode="numeric" autocomplete="off" value="1,000"
-                         aria-describedby="inputHelp" aria-required="true"
-                         pattern="[0-9,]*" title="Digits and commas only">
+                         aria-describedby="inputHelp" aria-required="true">
                 </div>
               </div>
 
