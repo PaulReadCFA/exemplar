@@ -246,13 +246,16 @@ body {
 
 .exemplar-result-block .label {
   display: block;
-  font-size: 0.875rem;
-  color: var(--color-gray-600);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-gray-800);
   margin-bottom: 0.25rem;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .exemplar-result-block .value {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--cfa-dark-blue); /* ✦ brand primary text on --surface-card */
 }
@@ -283,7 +286,30 @@ body {
   font-size: 1.125rem;
 }
 
-.input-instructions.exemplar-input-intro {
-  color: var(--color-gray-600);
-  margin-bottom: 1rem;
+#calculator .input-section {
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+#calculator .validation-summary {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  #calculator .input-inline {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  #calculator .input-label-inline {
+    white-space: normal;
+    max-width: 100%;
+  }
+
+  #calculator .input-with-suffix-inline {
+    width: 100%;
+    max-width: 100%;
+  }
 }

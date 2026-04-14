@@ -69,17 +69,23 @@
       <section class="card" id="calculator" tabindex="-1" aria-labelledby="calculator-title">
         <h4 class="card-title" id="calculator-title">Compound Interest Formula</h4>
         <div class="card-content">
-          <p class="input-instructions exemplar-input-intro">
+          <p class="equation-intro">
             Adjust the principal, annual rate, and number of periods. The equation, chart, and table update automatically. Principal: digits only, commas optional. The rate is entered as a percentage (e.g. 5 for 5%); it is divided by 100 in the formula.
           </p>
 
           <div class="input-section">
             <p class="sr-only" id="inputHelp">Enter principal as digits only with optional commas (no other characters), annual rate as a percentage, and number of periods as a whole number. Values must stay within the allowed ranges. Monetary amounts are shown as USD prefixed to the number with no space (for example USD1,234.56); screen readers use the word dollars for those values.</p>
 
+            <div id="validation-summary" class="validation-summary" role="alert" tabindex="-1"
+                 aria-live="assertive" style="display: none;">
+              <div class="validation-title">Please correct the following:</div>
+              <ul id="validation-list"></ul>
+            </div>
+
             <div class="input-group-inline">
               <div class="input-inline">
                 <label for="principal" class="input-label-inline">
-                  Principal (<span style="color: var(--color-green-data); font-style: italic;">P</span>):
+                  Principal (<span class="eq-var-5">P</span>):
                 </label>
                 <div class="input-with-suffix-inline">
                   <input type="text" id="principal" class="input-field-inline input-field-wide"
@@ -101,7 +107,7 @@
 
               <div class="input-inline">
                 <label for="periods" class="input-label-inline">
-                  Periods (<span style="color: var(--color-teal-data); font-style: italic;">n</span>, integer):
+                  Periods (<span class="eq-var-4">n</span>, integer):
                 </label>
                 <div class="input-with-suffix-inline">
                   <input type="number" id="periods" class="input-field-inline"
@@ -109,12 +115,6 @@
                          aria-describedby="inputHelp" aria-required="true">
                 </div>
               </div>
-            </div>
-
-            <div id="validation-summary" class="validation-summary" role="alert" tabindex="-1"
-                 aria-live="assertive" style="display: none;">
-              <div class="validation-title">Please correct the following:</div>
-              <ul id="validation-list"></ul>
             </div>
           </div>
         </div>

@@ -9,7 +9,7 @@ Reference layout for new **Equation Explorer** calculators. This folder demonstr
 | **`index.html`** | Main interactive page. Contains structure and semantics: metadata, stylesheet/script includes, skip links, calculator inputs, dynamic equation mount, chart/table view toggle, table container, results container, and live regions used by JS announcements. |
 | **`calculator.js`** | Main behavior module for `index.html`: input parsing/validation, series computation (`A = P(1 + r)^n`), dynamic MathML rendering + MathJax typesetting, chart/table rendering, view toggle behavior, responsive force-table behavior, skip-link handling, and accessibility announcements. |
 | **`cfa-base.css`** | Shared base design system used across explorers. Includes color tokens, layout primitives, card styles, form controls, table styles, toggle button styles, validation summary styles, skip-link utilities, and responsive table/card behavior. Treat as shared infrastructure, not one-off page styling. |
-| **`exemplar-specific.css`** | Page-specific overrides/extensions for this explorer only: input row layout, equation/visualizer sizing tweaks, results styling, and exemplar-level accessibility/contrast adjustments (for example table-header variable colors and high-zoom table overflow handling). |
+| **`exemplar-specific.css`** | Page-specific overrides/extensions for this explorer only: input row layout, equation/visualizer sizing tweaks, results styling, **Canvas/LTI page chrome** (`--exemplar-embed-surface` on `body` — grey outside cards while `.card` stays white via `cfa-base`), visualizer table header on white for token-coloured variables, legend/label variable colours, noscript/input intro classes, and high-zoom table overflow handling. |
 | **`formula.html`** | Standalone page with **only** the typeset equation (no prose, legend, or controls). Same MathJax setup as `index.html`. |
 | **`README.md`** | Usage notes and conventions for copying this exemplar into new calculators. |
 
@@ -28,13 +28,41 @@ These IDs/classes are relied on by **this** `cfa-base.css` (copied from the shar
 - **Structure:** `.container` → `main.content` → `.card` → `.card-title`, `.card-content`.
 - **Dynamic mounts:** `#dynamic-mathml-equation`, `#table-body`, `#results-content`, `#view-announcement`, `#calculation-announcement`.
 
-## Colours — does `cfa-base.css` have them all?
+## Colour logic
 
-**Almost all *shared* colours yes** — they live under `:root` at the top of `cfa-base.css` (section “1. CSS VARIABLES”): brand blues/purples/greens/oranges/teals, gray scale, red/error states, success/warning, tinted backgrounds (`--color-bg-*`), and legacy aliases (`--color-primary`, `--color-mint`, etc.).
+### Source of truth
 
-**Not in base:** colours that belong to **one product** only (e.g. bond PV/PMT/FV, binomial up/down paths). Those are defined in that explorer’s **`*-specific.css`** (or inline in HTML for legends). If you need a new *semantic* colour for a new topic, add a `--color-…` in **your** `*-specific.css` and use it in JS/HTML for charts and labels — only promote it to `cfa-base.css` if several explorers should share it.
+- **Canonical palette:** `cfa-base.css` → `:root` (section **“1. CSS VARIABLES”**). The long comment block at the top of that file documents the **v3 brand system**: which hues are text-safe on white, which are decorative only, and contrast notes.
+- **Prefer `var(--…)` in CSS** (e.g. `var(--color-blue-interactive)`, `var(--color-gray-600)`, `var(--surface-card)`). **Do not** introduce arbitrary hex in shared layouts when a token exists.
 
-**Prefer tokens over hex** in new code: e.g. `var(--color-blue-interactive)`, `var(--color-gray-600)`.
+### v3 rule: variable hues on white only
+
+Equation-explorer **variable colours** (`--var-*` and the aliases like `--color-teal-data`, `--color-orange-deep`) are tested for **WCAG AA on `--surface-card` (`#FFFFFF`)**. **`cfa-base.css` states they must not appear on striped or tinted row backgrounds** (e.g. table body stripes use `--surface-stripe`; only neutral text colours belong there). If you need coloured variables in a **table header** that would otherwise sit on a tinted thead, force that header row to **`--surface-card`** in your `*-specific.css` (this exemplar does that for `#visualizer .data-table thead th`).
+
+### Where hex is still required
+
+- **MathML `mathcolor`** attributes cannot reference CSS variables. Use the **same hex values as in `:root`** (see `buildMathML()` in `calculator.js` and `formula.html`).
+- **Chart.js** options do not read CSS custom properties. This exemplar keeps a **`PALETTE` object** in `calculator.js` that **mirrors** the base tokens; if you change a token in `cfa-base.css`, update `PALETTE` (and any MathML hex) to match.
+
+### Per-role choices in this exemplar
+
+| Area | Logic |
+|------|--------|
+| **Page gutter** | `body` → `--exemplar-embed-surface` (`rgb(248,248,248)`) for Canvas-style hosts; cards stay white (see below). |
+| **Cards** | From `cfa-base`: `.card` → `--surface-card` (not overridden here). |
+| **Results** | Labels → `--color-gray-600`; emphasized values → `--cfa-dark-blue`. |
+| **Legend + rate label `r`** | Token variable colours on the white card (`--color-blue-interactive`, `--color-green-data`, `--color-orange-deep`, `--color-teal-data`). |
+| **Noscript / errors** | Classes in `exemplar-specific.css` using `--color-error*`, `--color-red-800`, `--color-gray-700`. |
+
+**Orange on grey:** Brand orange (`--var-6` / `#B95B1D`) fails normal-text AA on `#f8f8f8`; keeping **variable-coloured UI on white card interiors** avoids a separate “darker orange for embed” token.
+
+### Does `cfa-base.css` have every colour?
+
+**Almost all shared semantics, yes** — brand anchors, `--var-*`, grays, error/success/warning, surfaces, legacy aliases.
+
+**Not in base:** one-off product colours (e.g. bond legs, binomial paths). Put those in **`*-specific.css`** (or promote to base only if several explorers need the same name).
+
+**This exemplar vs default `body`:** `cfa-base` sets `body` to **`--surface-page`** (warm off-white). Here, **`exemplar-specific.css` overrides `body`** to **`--exemplar-embed-surface`** only; **cards are not overridden**, so they remain **`--surface-card`**. For a standalone page on brand only, drop or repoint that `body` rule.
 
 ## Conventions worth keeping
 
@@ -43,6 +71,9 @@ These IDs/classes are relied on by **this** `cfa-base.css` (copied from the shar
 3. **MathJax** — Use config consistent with siblings (`MML_HTMLorMML` when injecting MathML); enable `menuSettings.explorer: true` so the accessibility menu / Explorer matches the bundled `accessibility-menu.js`. After typeset, strip stray MathJax `tabindex` **outside** the live equation container only (`#dynamic-equation-container`), so Explorer can manage focus inside the dynamic math.
 4. **Chart.js** — Destroy the previous instance before creating a new one. Respect reduced motion via **`matchMedia('(prefers-reduced-motion: reduce)')`** in JS (canvas does not read CSS `@media`): disable chart `animation`, shorten `transitions`, set `plugins.tooltip.animation` off, and optionally re-render when the media query changes.
 5. **Live regions** — Polite announcements for calculation/view updates; assertive for validation errors where appropriate.
+6. **No raw non-finite numbers in the UI** — Never show `NaN`, `Infinity`, or `-Infinity` in results, tables, charts, MathML, or screen-reader text. Use validation, pre-render guards (`Number.isFinite`), and/or safe formatters (placeholders like `—` plus clear copy when inputs cannot produce a real value). Keep equation, results, chart, and table behavior consistent.
+7. **Cap numeric input length** — Do not allow unbounded typing or paste into calculator fields. `maxlength` on `type="number"` is not dependable; enforce a max raw string length in JS. **Default:** 6 characters for numeric fields; **10** for comma-formatted currency **text** inputs (principal) where commas add length.
+8. **Small screens** — Long labels plus `nowrap` flex rows can force horizontal overflow and scrollbars. At narrow breakpoints, allow label/control to wrap or stack, keep `max-width: 100%` / `min-width: 0` on flex children as needed, and place block-level validation (e.g. summary) so the **whole** input group shifts consistently rather than individual rows reflowing oddly when errors appear.
 
 ## Model used in this exemplar
 

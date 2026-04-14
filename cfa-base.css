@@ -5,6 +5,18 @@
    Version: 3.0 — Brand-aligned colour system
    Updated: 2026
 
+   CANONICAL BASE (NEW EXPLORERS)
+   ───────────────────────────────
+   This exemplar/cfa-base.css is the reference implementation for core layout,
+   tokens, tables, charts, cards, and accessibility patterns. When adding a new
+   explorer, start from this file and keep only product-specific rules in a
+   separate stylesheet (e.g. bond-specific.css, forward-rate-specific.css).
+
+   Existing shipped calculators still bundle their own cfa-base.css copies;
+   those may drift. A later pass can diff each copy against this file and move
+   deltas into the explorer’s *-specific.css (or re-align the copy) without
+   blocking current work.
+
    COLOUR SYSTEM OVERVIEW
    ══════════════════════════════════════════════════════════════════════════
    Source: CFA Brand Guidelines 2026, Draft 1.01–1.04
@@ -32,6 +44,207 @@
    formula variables always sit on a white surface.
    ══════════════════════════════════════════════════════════════════════════
    ========================================================================== */
+
+   /* ==========================================================================
+   CFA Calculator Base Styles — v3 ADDENDUM
+   Extra guidance and reference (Compound Interest Exemplar audit, 2026).
+   Lives in this file after the overview banner and before :root / @import.
+   ========================================================================== */
+ 
+ 
+/* ==========================================================================
+   A. CANVAS / LTI EMBED SURFACE OVERRIDE
+   ══════════════════════════════════════════════════════════════════════════
+   Canvas LMS wraps each LTI tool in a page with a grey gutter
+   (approximately #F8F8F8 / rgb(248,248,248)). By default cfa-base sets
+   body to --surface-page (Warm White 25%, #FDFAF7), which clashes with
+   the host chrome. The fix is a one-line body override in *-specific.css.
+ 
+   DEFINE this in your *-specific.css:
+ 
+     :root {
+       --exemplar-embed-surface: rgb(248, 248, 248);   (matches Canvas host gutter)
+      }
+      body {
+        background-color: var(--exemplar-embed-surface);
+      }
+  
+    DO NOT change .card or --surface-card. Cards must remain white (#FFFFFF).
+  
+    WHY THIS MATTERS FOR COLOUR COMPLIANCE
+    ──────────────────────────────────────
+    --var-6 / --color-orange-deep (#B95B1D) is 4.33:1 on #F8F8F8.
+    That is below the 4.5:1 AA normal-text threshold.
+  
+    This is why the white-only rule for --var-* text is non-negotiable in
+    Canvas deployments. Equation variables, legend labels, and rate/period
+    labels coloured with --var-* tokens must always sit inside a .card
+    element (white interior), not on the page gutter or any tinted surface.
+  
+    Contrast on #F8F8F8 by variable token:
+      --var-1  #06005A   18.1:1  ✓ AA
+      --var-2  #3C6AE5    4.50:1  ✓ AA (marginal — large text recommended)
+      --var-3  #7A46FF    4.81:1  ✓ AA
+      --var-4  #0079A6    4.66:1  ✓ AA
+      --var-5  #07514F    7.71:1  ✓ AA
+      --var-6  #B95B1D    4.33:1  ✗ FAIL — white card surfaces only
+      --var-7  #646464    5.45:1  ✓ AA
+  
+    Only --var-6 fails. Keep it inside cards. All others technically pass
+    on the Canvas gutter, but the white-only rule covers all tokens for
+    consistency and forward safety.
+    ========================================================================== */
+  
+  
+ /* ==========================================================================
+    B. MATHJAX / MATHML HEX REFERENCE
+    ══════════════════════════════════════════════════════════════════════════
+    MathML mathcolor attributes and Chart.js dataset colours cannot read
+    CSS custom properties. Any code using these APIs must hardcode the hex
+    values below. When a token value changes in :root, update here too.
+  
+    CANONICAL HEX TABLE (v3)
+    ────────────────────────
+    CSS token              Hex        Use in mathcolor / Chart.js
+    ──────────────────────────────────────────────────────────────
+    --var-1  (Dark Blue)   #06005A    Primary variable (PV, price, P₀)
+    --var-2  (Deep Blue)   #3C6AE5    Second variable  (PMT, coupon, accumulated A)
+    --var-3  (Purple)      #7A46FF    Tertiary accent  (context-specific; e.g. YTM)
+    --var-4  (Deep Teal)   #0079A6    Period / count   (N, n, t)
+    --var-5  (Pine)        #07514F    Principal / growth (P, g)
+    --var-6  (Deep Orange) #B95B1D    Rate / result    (r, i, FV — on white only)
+    --var-7  (Dark Grey)   #646464    Seventh variable / annotations
+  
+    UI CHROME (non-variable, needed for Chart.js options)
+    ──────────────────────────────────────────────────────
+    --color-gray-200       #E5E7EB    Grid lines
+    --color-gray-700       #374151    Axis labels
+    --color-gray-800       #1F2937    Tick labels, tooltip text
+    --surface-card         #FFFFFF    Chart canvas / tooltip background
+  
+    USAGE PATTERN — JavaScript PALETTE object
+    ──────────────────────────────────────────
+    Keep a PALETTE constant at the top of your calculator.js that mirrors
+    these values. Add a comment on each line pointing back to the CSS token.
+    When the token changes, the comment makes the matching hex easy to find.
+  
+    Example:
+      const PALETTE = {
+        var1:        '#06005A',  // --var-1  / --color-primary-dark-blue
+        var2:        '#3C6AE5',  // --var-2  / --color-blue-interactive
+        var3:        '#7A46FF',  // --var-3  / --color-purple-bold
+        var4:        '#0079A6',  // --var-4  / --color-teal-data
+        var5:        '#07514F',  // --var-5  / --color-green-data (Pine)
+        var6:        '#B95B1D',  // --var-6  / --color-orange-deep
+        gray200:     '#E5E7EB',  // --color-gray-200
+        gray700:     '#374151',  // --color-gray-700
+        gray800:     '#1F2937',  // --color-gray-800
+        surfaceCard: '#FFFFFF',  // --surface-card
+      };
+  
+    USAGE PATTERN — MathML mathcolor attribute
+    ───────────────────────────────────────────
+    Use the hex directly. Match the variable role to the token above.
+  
+    Example (A = P × (1 + r)^n):
+      <mi mathcolor="#3C6AE5">A</mi>          <!-- --var-2 accumulated amt  -->
+      <mn mathcolor="#07514F">{P}</mn>         <!-- --var-5 principal        -->
+      <mn mathcolor="#B95B1D">{rDecimal}</mn>  <!-- --var-6 rate (on white!) -->
+      <mn mathcolor="#0079A6">{n}</mn>         <!-- --var-4 periods          -->
+    ========================================================================== */
+  
+  
+ /* ==========================================================================
+    C. V2 → V3 MIGRATION NOTE: --color-green-data VALUE CHANGE
+    ══════════════════════════════════════════════════════════════════════════
+    In v2:  --color-green-data: #15803d  (Tailwind green-700, bright grass)
+    In v3:  --color-green-data → --var-5 → #07514F  (Brand Pine, dark forest)
+  
+    This is a VISUAL BREAKING CHANGE. Any calculator using --color-green-data
+    for a variable colour (typically principal P or growth rate g) will shift
+    from bright green to dark pine-green when upgrading to v3 base CSS.
+  
+    The new value is better: Pine is a defined brand secondary colour; the
+    old #15803d was an off-brand Tailwind utility value.
+  
+    ACTION REQUIRED WHEN UPGRADING:
+    1. Update any MathML mathcolor="#15803d" → mathcolor="#07514F"
+    2. Update any Chart.js PALETTE entries using #15803d → #07514F
+    3. Review screenshots / visual tests that include P or g variables
+    4. Check that #07514F is visually distinct from --var-4 (#0079A6) in
+       your specific equation layout (both are dark green-teal family;
+       they differ clearly in hue but may be harder to distinguish for
+       deuteranopia users — consider adding italic or bold weight to one)
+  
+    CONTRAST NOTE:
+    #07514F is 8.10:1 on white — passes AA comfortably.
+    #07514F is 7.71:1 on #F8F8F8 (Canvas gutter) — also passes.
+    ========================================================================== */
+  
+  
+ /* ==========================================================================
+    D. TOKEN NAMING CONVENTION FOR NEW CODE
+    ══════════════════════════════════════════════════════════════════════════
+    v3 introduces two naming layers:
+  
+    LAYER 1 — Canonical tokens (use in base CSS declarations only)
+      --cfa-*      Raw brand values from the 2026 brand guide (reference only)
+      --var-1..7   Accessible variable colours for equation explorers
+      --surface-*  Locked background surfaces
+  
+    LAYER 2 — Legacy aliases (use in component CSS and HTML)
+      --color-blue-interactive  → --var-2
+      --color-purple-bold       → --var-3
+      --color-teal-data         → --var-4
+      --color-green-data        → --var-5
+      --color-orange-deep       → --var-6
+      --color-primary-dark-blue → --cfa-dark-blue
+      (full list in Section H of cfa-base.css)
+  
+    RECOMMENDATION:
+    - In *-specific.css and HTML inline styles: use legacy alias names.
+      They are more readable in context ("this is orange" vs "this is var-6")
+      and make the variable identity clear to anyone reading the HTML.
+    - In base CSS declarations and the PALETTE/mathcolor table above:
+      use canonical names with alias comments.
+    - When all calculators have been audited and legacy names confirmed
+      consistent, deprecate the aliases and migrate to --var-* names.
+  
+    NEW CODE SHOULD NOT introduce new off-token hex values for variable
+    colours. If a formula needs a colour not covered by --var-1 through
+    --var-7, add a new --var-8 token to the base with full documentation
+    rather than putting a bare hex in specific CSS.
+    ========================================================================== */
+  
+  
+ /* ==========================================================================
+    E. INLINE VARIABLE TOKEN MARKUP — USE CLASSES NOT INLINE STYLES
+    ══════════════════════════════════════════════════════════════════════════
+    v3 cfa-base.css defines .eq-var-1 through .eq-var-7 and .eq-chip-1
+    through .eq-chip-7 for colouring inline equation variable tokens in HTML.
+  
+    PREFERRED:
+      <label>Principal (<span class="eq-var-5">P</span>):</label>
+      <span class="eq-chip-4">n</span>
+  
+    AVOID:
+      <span style="color: var(--color-green-data); font-style: italic;">P</span>
+      <span style="color: var(--color-teal-data); font-style: italic;">n</span>
+  
+    The class approach:
+    - Keeps colour decisions in CSS, not scattered through HTML
+    - Automatically picks up future token value updates
+    - Makes it easy to search for all variable colour usages
+    - The italic style is applied per-class, so it's consistent
+  
+    .eq-var-* applies colour + bold weight (text in equations).
+    .eq-chip-* applies colour + matching tint background (for selector chips,
+    legend swatches, variable key rows).
+  
+    KNOWN DEVIATION IN EXEMPLAR:
+    index.html currently has two inline style= attributes for P and n labels
+    (lines ~87 and ~97). These should be updated to eq-var-5 and eq-var-4.
+    ========================================================================== */
 
 /* Google Fonts - Lato */
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;500;600;700&display=swap');
@@ -397,9 +610,9 @@ body {
   .skip-link:nth-child(4):focus { top: 9.5rem; }
 }
 
-section[tabindex]:focus,
-table[tabindex]:focus,
-canvas[tabindex]:focus {
+section[tabindex]:focus-visible,
+table[tabindex]:focus-visible,
+canvas[tabindex]:focus-visible {
   outline: 2px solid var(--color-interactive);
   outline-offset: 4px;
 }
@@ -475,6 +688,7 @@ kbd {
   border-radius: 1rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 1.25rem;
+  --card-padding-x: 1.25rem;
 }
 
 .card-title {
@@ -517,9 +731,15 @@ kbd {
   border-bottom: none;
 }
 
+/* Legend wrapper (first flex item): grow so Chart/Table hug the right; min-width
+   lets the row wrap cleanly. (.legend is nested — flex:1 on it had no effect.) */
+.view-controls > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .view-controls .legend,
 .view-controls .chart-legend {
-  flex: 1;
   margin-bottom: 0;
 }
 
@@ -527,6 +747,8 @@ kbd {
   display: flex;
   gap: 0.5rem;
   flex-shrink: 0;
+  /* When legend/title wraps, keep toggles on the right (same as implied growth) */
+  margin-left: auto;
 }
 
 .model-selector-label,
@@ -574,17 +796,67 @@ kbd {
   box-shadow: 0 0 0 2px #000000;
 }
 
+/* Chart/Table: right-aligned ≤640px; full-width equal targets ≤380px (WCAG touch). */
 @media (max-width: 640px) {
   .view-controls {
     flex-direction: column;
     align-items: stretch;
   }
-  .button-group {
+
+  .view-controls > :first-child {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .view-controls .button-group {
+    width: auto;
+    max-width: 100%;
     align-self: flex-end;
     justify-content: flex-end;
+    margin-left: 0;
   }
-  .button-group .toggle-btn {
+
+  .view-controls .button-group .toggle-btn,
+  .view-controls .button-group .model-btn {
     flex: 0 0 auto;
+  }
+
+  .card-header-with-controls .button-group {
+    width: auto;
+    max-width: 100%;
+    align-self: flex-end;
+    justify-content: flex-end;
+    margin-left: 0;
+  }
+
+  .card-header-with-controls .button-group .toggle-btn,
+  .card-header-with-controls .button-group .model-btn {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 380px) {
+  .view-controls .button-group {
+    align-self: stretch;
+    width: 100%;
+  }
+
+  .view-controls .button-group .toggle-btn,
+  .view-controls .button-group .model-btn {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .card-header-with-controls .button-group {
+    align-self: stretch;
+    width: 100%;
+  }
+
+  .card-header-with-controls .button-group .toggle-btn,
+  .card-header-with-controls .button-group .model-btn {
+    flex: 1;
+    min-width: 0;
   }
 }
 
@@ -617,6 +889,8 @@ kbd {
 
 .equation-intro {
   font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
   color: var(--color-gray-600);
   margin-bottom: 1rem;
   text-align: left;
@@ -664,9 +938,11 @@ kbd {
 }
 
 .result-title {
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .result-value {
@@ -684,6 +960,23 @@ kbd {
   width: 100%;
   height: auto;
   min-height: 400px;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+}
+
+/* Full-width chart: cancel horizontal card padding (inherits --card-padding-x from .card) */
+#visualizer #chart-container.chart-wrapper,
+#visualizer #chart-container .chart-wrapper,
+#visualization-card #chart-container.chart-wrapper {
+  margin-left: calc(-1 * var(--card-padding-x, 1.25rem));
+  margin-right: calc(-1 * var(--card-padding-x, 1.25rem));
+  width: calc(100% + 2 * var(--card-padding-x, 1.25rem));
+  max-width: none;
+  box-sizing: border-box;
+  border-radius: 0;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
 }
 
 .table-wrapper,
@@ -809,6 +1102,21 @@ kbd {
   .table-card-layout .data-table td,
   .table-card-layout .data-table tr {
     display: block;
+  }
+
+  /* Table is display:block in card mode — caption must be block too or it collapses oddly */
+  .table-card-layout .data-table caption {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    caption-side: top;
+    padding: 0 0.5rem 0.75rem;
+    margin: 0 0 0.25rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--color-gray-800);
+    text-align: left;
   }
 
   .table-card-layout .data-table thead {
@@ -1134,6 +1442,7 @@ button[title]:hover::before {
   }
   .card {
     padding: 1rem;
+    --card-padding-x: 1rem;
   }
   .card-title {
     font-size: 1.25rem;
@@ -1143,6 +1452,7 @@ button[title]:hover::before {
 @media (max-width: 600px) {
   .card {
     padding: 0.875rem;
+    --card-padding-x: 0.875rem;
   }
   .card-title {
     font-size: 1.125rem;

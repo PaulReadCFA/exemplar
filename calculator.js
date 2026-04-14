@@ -40,6 +40,25 @@ function debounce(fn, ms) {
   };
 }
 
+const NUMERIC_INPUT_MAX_CHARS = 6;
+const FORMATTED_NUMERIC_INPUT_MAX_CHARS = 10;
+
+function clampNumericInputLength(input, maxLen) {
+  if (!input || input.value == null || maxLen <= 0) return;
+  const raw = String(input.value);
+  if (raw.length <= maxLen) return;
+  const start = input.selectionStart;
+  const end = input.selectionEnd;
+  input.value = raw.slice(0, maxLen);
+  if (typeof input.setSelectionRange === 'function') {
+    const pos = Math.min(
+      typeof start === 'number' && typeof end === 'number' ? Math.min(start, end) : maxLen,
+      maxLen
+    );
+    input.setSelectionRange(pos, pos);
+  }
+}
+
 /**
  * JS equivalent of CSS `prefers-reduced-motion: reduce` (same user preference, readable from script).
  * Use for canvas APIs (Chart.js) that do not consult CSS media queries on their own.
@@ -198,6 +217,7 @@ function setupPrincipalFormatting() {
       el.value = cleaned;
       el.setSelectionRange?.(pos, pos);
     }
+    clampNumericInputLength(el, FORMATTED_NUMERIC_INPUT_MAX_CHARS);
   };
 
   // Digits and comma only (comma formatting on blur).
@@ -249,6 +269,7 @@ function setupNumberOnlyFields() {
       periods.value = cleaned;
       periods.setSelectionRange?.(pos, pos);
     }
+    clampNumericInputLength(periods, NUMERIC_INPUT_MAX_CHARS);
   };
   if (periods) {
     periods.addEventListener('beforeinput', (e) => {
@@ -280,6 +301,7 @@ function setupNumberOnlyFields() {
       rate.value = v;
       rate.setSelectionRange?.(pos, pos);
     }
+    clampNumericInputLength(rate, NUMERIC_INPUT_MAX_CHARS);
   };
   if (rate) {
     rate.addEventListener('beforeinput', (e) => {
