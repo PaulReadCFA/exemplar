@@ -22,6 +22,17 @@ const PALETTE = {
   surfaceCard: '#FFFFFF', // --surface-card
 };
 
+/** Chart.js cannot read CSS variables; keep tick/title size ≥16px (LDO ~18px body text). */
+const CHART_FONT = {
+  family: "'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+  size: 16,
+};
+
+/** ISO 4217 code for visible money (EE QR: EUR not €, USD not $). */
+const CURRENCY_ISO = 'USD';
+/** Screen-reader money phrasing — match CURRENCY_ISO (e.g. "US dollars", "euros"). */
+const CURRENCY_SPEECH_LABEL = 'US dollars';
+
 let chartInstance = null;
 /** Last successfully computed series — used when toggling back to chart without a full recalc. */
 let lastGoodSeries = null;
@@ -345,14 +356,14 @@ function fmtMoneyAmount(v) {
   return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-/** Visible: `USD1,234.56` (no space; prefix). */
+/** Visible: `USD1,234.56` (no space; ISO prefix). */
 function fmtMoneyVisual(v) {
-  return `USD${fmtMoneyAmount(v)}`;
+  return `${CURRENCY_ISO}${fmtMoneyAmount(v)}`;
 }
 
-/** Spoken-friendly for aria-label and live regions (not “U-S-D”). */
+/** Spoken-friendly for aria-label and live regions (not letter-by-letter ISO). */
 function fmtMoneySpeech(v) {
-  return `${fmtMoneyAmount(v)} dollars`;
+  return `${fmtMoneyAmount(v)} ${CURRENCY_SPEECH_LABEL}`;
 }
 
 /** Format the rate percentage as its decimal equivalent, stripping trailing zeros. */
@@ -538,9 +549,7 @@ function renderChart(xs, ys) {
           label: 'Amount (A)',
           data: ys,
           borderColor: PALETTE.blueInteractive,
-          /* 12% tint of --var-2 (#3C6AE5 → 60,106,229) */
-          backgroundColor: 'rgba(60, 106, 229, 0.12)',
-          fill: true,
+          fill: false,
           tension: 0.3,
           pointRadius: 4,
           pointHoverRadius: 6,
@@ -548,6 +557,7 @@ function renderChart(xs, ys) {
       ],
     },
     options: {
+      font: CHART_FONT,
       responsive: true,
       maintainAspectRatio: false,
       animation: reduceMotion ? false : undefined,
@@ -564,6 +574,8 @@ function renderChart(xs, ys) {
       plugins: {
         legend: { display: false },
         tooltip: {
+          titleFont: { ...CHART_FONT, weight: 'bold' },
+          bodyFont: CHART_FONT,
           animation: reduceMotion ? false : undefined,
           backgroundColor: PALETTE.surfaceCard,
           titleColor: PALETTE.gray800,
@@ -597,8 +609,9 @@ function renderChart(xs, ys) {
             display: true,
             text: 'Period (n)',
             color: PALETTE.gray800,
+            font: { ...CHART_FONT, weight: 'bold' },
           },
-          ticks: { color: PALETTE.gray700 },
+          ticks: { color: PALETTE.gray700, font: CHART_FONT },
           grid: { color: 'rgba(0,0,0,0.06)' },
         },
         y: {
@@ -606,9 +619,11 @@ function renderChart(xs, ys) {
             display: true,
             text: 'Amount (A), USD',
             color: PALETTE.gray800,
+            font: { ...CHART_FONT, weight: 'bold' },
           },
           ticks: {
             color: PALETTE.gray700,
+            font: CHART_FONT,
             callback: (v) => fmtMoneyAmount(v),
           },
           grid: { color: 'rgba(0,0,0,0.06)' },

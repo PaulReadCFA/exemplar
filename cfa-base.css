@@ -246,6 +246,41 @@
     (lines ~87 and ~97). These should be updated to eq-var-5 and eq-var-4.
     ========================================================================== */
 
+
+ /* ==========================================================================
+    F. CURRENCY NOTATION — EE QUALITY REVIEW
+    ══════════════════════════════════════════════════════════════════════════
+    EE QR checklist (Labeling consistency): use ISO 4217 currency CODES, not
+    symbols. EUR ✓ — € ✗. USD ✓ — $ ✗.
+
+    IMPLEMENTATION (calculator.js — one place to change per topic)
+    ─────────────────────────────────────────────────────────────
+    Define at the top of calculator.js:
+
+      const CURRENCY_ISO = 'USD';              // or EUR, GBP, … per spec
+      const CURRENCY_SPEECH_LABEL = 'US dollars';  // screen-reader phrasing
+
+    Use in:
+      fmtMoneyVisual()   →  `USD1,234.56`  — results card, chart tooltips (no column header)
+      fmtMoneyAmount()   →  `1,234.56`     — table body cells (unit already in thead / data-label)
+      fmtMoneySpeech()   →  `1,234.56 US dollars`  (not “U-S-D” letter-by-letter)
+      Chart axis title   →  `Amount (USD)`  (unit in label, not $ on ticks)
+      Table headers      →  `Amount (USD)` in <th> and matching data-label on <td>
+      Results card       →  fmtMoneyVisual for visible headline values
+
+    Do NOT use $, €, £, ¥ in visible HTML, MathML, chart tooltips, tables, or
+    results. Excel tolerance copy in build docs may say “$0.01” for authors;
+    learner-facing explorer UI must follow ISO codes.
+
+    SEMANTIC PARITY
+    ───────────────
+    Chart tooltips, table cells, and results must show the same numeric values
+    for the same period (QR: display modes must not change meaning). Table cells
+    omit the ISO prefix when the column header already carries it.
+
+    See README § Quality review (EE QR checklist) for the full builder map.
+    ========================================================================== */
+
 /* Google Fonts - Lato */
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;500;600;700&display=swap');
 
@@ -528,7 +563,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 18px; /* LDO: ≥14pt (~18px) readable text at 100% zoom */
   scroll-behavior: smooth;
 }
 
@@ -689,6 +724,12 @@ kbd {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 1.25rem;
   --card-padding-x: 1.25rem;
+}
+
+/* Calculator / data-entry card — brand blue frame (EE convention; exemplars A & B) */
+#calculator.card,
+#data-entry.card {
+  border: 2px solid var(--color-interactive); /* ✦ BRAND: Bright Blue #326AFF */
 }
 
 .card-title {
@@ -1022,7 +1063,7 @@ kbd {
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9375rem;
+  font-size: 1rem;
   background: var(--surface-card);
 }
 
@@ -1036,7 +1077,7 @@ kbd {
   position: sticky;
   top: 0;
   z-index: 10;
-  font-size: 0.9375rem;
+  font-size: 1rem;
 }
 
 .data-table tbody td,
@@ -1180,7 +1221,7 @@ kbd {
     content: attr(data-label);
     font-weight: 600;
     color: var(--color-gray-700);
-    font-size: 0.8125rem;
+    font-size: 1rem;
     flex: 0 0 auto;
     min-width: 0;
     max-width: 40%;
@@ -1196,7 +1237,7 @@ kbd {
     flex-shrink: 0;
     flex-grow: 1;
     text-align: right;
-    font-size: 0.875rem;
+    font-size: 1rem;
     word-break: break-word;
     min-width: 0;
   }
@@ -1240,7 +1281,7 @@ kbd {
     content: attr(data-label);
     font-weight: 600;
     color: var(--color-gray-700);
-    font-size: 0.875rem;
+    font-size: 1rem;
   }
 
   .table-card-layout .data-table tfoot td strong {
