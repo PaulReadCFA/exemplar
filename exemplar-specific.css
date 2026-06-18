@@ -11,6 +11,17 @@ body {
   background-color: var(--exemplar-embed-surface);
 }
 
+/* Cards 1, 2, 4 — intro / label copy slightly below 1rem; chart & table unchanged (card 3) */
+#calculator .equation-intro,
+#equation-card .equation-intro {
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+
+#results-card .exemplar-result-block .label {
+  font-size: 0.9375rem;
+}
+
 /* Light header row on white: variable letters use equation tokens; label text stays gray-800 */
 #visualizer .data-table thead th {
   background-color: var(--surface-card);
