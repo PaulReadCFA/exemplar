@@ -5,17 +5,14 @@
    Version: 3.0 — Brand-aligned colour system
    Updated: 2026
 
-   CANONICAL BASE (NEW EXPLORERS)
-   ───────────────────────────────
-   This exemplar/cfa-base.css is the reference implementation for core layout,
-   tokens, tables, charts, cards, and accessibility patterns. When adding a new
-   explorer, start from this file and keep only product-specific rules in a
-   separate stylesheet (e.g. bond-specific.css, forward-rate-specific.css).
+   WORKSPACE MASTER (Equation Explorers)
+   ─────────────────────────────────────
+   Source: Compound Interest exemplar (PaulReadCFA/exemplar) v3 brand system.
+   Edit only _shared/cfa-base.css, then run scripts/sync-cfa-base.sh.
+   Each explorer vendors a local copy for portable / offline use.
+   Keep product-specific rules in *-specific.css, not in this file.
 
-   Existing shipped calculators still bundle their own cfa-base.css copies;
-   those may drift. A later pass can diff each copy against this file and move
-   deltas into the explorer’s *-specific.css (or re-align the copy) without
-   blocking current work.
+   Version: 3.1 (Master — exemplar lineage)
 
    COLOUR SYSTEM OVERVIEW
    ══════════════════════════════════════════════════════════════════════════
@@ -473,6 +470,7 @@
      chosen to meet WCAG AA 3:1 non-text contrast requirement for form
      inputs. Do not lighten without re-testing. */
   --color-input-border: #8B93A7;
+  --color-input-border-hover: #6B7590; /* darkened for hover AA */
 
 
   /* ──────────────────────────────────────────────────────────────────────
@@ -773,8 +771,10 @@ kbd {
 }
 
 /* Legend wrapper (first flex item): grow so Chart/Table hug the right; min-width
-   lets the row wrap cleanly. (.legend is nested — flex:1 on it had no effect.) */
-.view-controls > :first-child {
+   lets the row wrap cleanly. (.legend is nested — flex:1 on it had no effect.)
+   Buttons and .button-group are excluded: explorers without a legend would
+   otherwise stretch the first toggle button across the row. */
+.view-controls > :first-child:not(button):not(.button-group) {
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -844,7 +844,7 @@ kbd {
     align-items: stretch;
   }
 
-  .view-controls > :first-child {
+  .view-controls > :first-child:not(button):not(.button-group) {
     flex: none;
     width: 100%;
     min-width: 0;
@@ -1423,12 +1423,15 @@ kbd {
 
 /* ==========================================================================
    CUSTOM TOOLTIP STYLING
+   Skip empty title="" (JS sometimes left that after clearing a tip).
+   Chart/Table toggles should not use title — use #chart-helper-text when
+   chart is disabled on narrow widths (exemplar / bond pattern).
    ========================================================================== */
-button[title] {
+button[title]:not([title=""]) {
   position: relative;
 }
 
-button[title]:hover::after {
+button[title]:not([title=""]):hover::after {
   content: attr(title);
   position: absolute;
   bottom: calc(100% + 8px);
@@ -1446,7 +1449,7 @@ button[title]:hover::after {
   pointer-events: none;
 }
 
-button[title]:hover::before {
+button[title]:not([title=""]):hover::before {
   content: '';
   position: absolute;
   bottom: calc(100% + 2px);
@@ -1459,7 +1462,7 @@ button[title]:hover::before {
 }
 
 @media (max-width: 640px) {
-  button[title]:hover::after {
+  button[title]:not([title=""]):hover::after {
     white-space: normal;
     max-width: 240px;
     text-align: center;
@@ -1584,4 +1587,459 @@ button[title]:hover::before {
   .skip-link {
     transition: none !important;
   }
+}
+
+
+/* ==========================================================================
+   COMPATIBILITY — Shared explorer form / info / tooltip patterns
+   Promoted from the prior forwardrate-lineage base so existing calculators
+   keep working. Prefer these class names in new explorers too; put only
+   one-off product rules in *-specific.css.
+   ========================================================================== */
+
+/* --- Form inputs --- */
+.input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.input-label {
+  font-weight: 500;
+  color: var(--color-gray-700);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.required-star {
+  color: var(--color-error);
+  margin-left: 0.25rem;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-input-border);
+  border-radius: 0.375rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  min-height: 44px;
+  background: var(--surface-card);
+  color: var(--color-gray-800);
+}
+
+.input-field:hover {
+  border-color: var(--color-input-border-hover);
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--color-blue-interactive);
+  box-shadow: 0 0 0 3px rgba(60, 106, 229, 0.1);
+}
+
+.input-field.error,
+.input-field[aria-invalid="true"] {
+  border-color: var(--color-red-500);
+  border-width: 2px;
+  background-color: var(--color-red-50);
+}
+
+.input-field.error:focus,
+.input-field[aria-invalid="true"]:focus {
+  border-color: var(--color-red-700);
+  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.2);
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.input-prefix,
+.input-suffix {
+  font-weight: 500;
+  color: var(--color-gray-500);
+  white-space: nowrap;
+  font-size: 0.9rem;
+  min-width: 1.8ch;
+  flex-shrink: 0;
+}
+
+.input-prefix { padding-right: 0.3rem; }
+.input-suffix { padding-left: 0.3rem; }
+
+.input-group-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2rem;
+}
+
+.input-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.input-label-inline {
+  font-size: 0.875rem;
+  color: var(--color-gray-700);
+  min-width: fit-content;
+}
+
+.input-with-suffix-inline {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 6rem;
+  position: relative;
+}
+
+.input-field-inline {
+  flex: 1;
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  padding-right: 1.5rem;
+  border: 1px solid var(--color-input-border);
+  border-radius: 0.375rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  text-align: right;
+  box-sizing: border-box;
+  min-height: 44px;
+  background: var(--surface-card);
+  color: var(--color-gray-800);
+}
+
+.input-field-inline:hover {
+  border-color: var(--color-input-border-hover);
+}
+
+.input-field-inline:focus {
+  outline: none;
+  border-color: var(--color-blue-interactive);
+  box-shadow: 0 0 0 2px rgba(60, 106, 229, 0.1);
+}
+
+.input-field-inline.error {
+  border-color: var(--color-red-700) !important;
+  box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.2);
+}
+
+.input-prefix-inline {
+  position: absolute;
+  left: 0.4rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-gray-500);
+  pointer-events: none;
+  font-size: 0.875rem;
+  z-index: 1;
+}
+
+.input-field-inline.input-with-prefix {
+  padding-left: 2.5rem;
+}
+
+.input-suffix-inline {
+  position: absolute;
+  right: 0.4rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-gray-500);
+  pointer-events: none;
+  width: 1.2rem;
+  text-align: right;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 640px) {
+  .input-group-inline {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .input-inline { width: 100%; }
+  .input-with-suffix-inline {
+    width: 100%;
+    max-width: 12rem;
+  }
+}
+
+.required-text {
+  font-size: 0.75rem;
+  color: var(--color-gray-500);
+  margin-bottom: 1rem;
+}
+
+/* --- Static info row (bond / bondytm) --- */
+.info-box {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem 1rem;
+  padding: 0.75rem;
+  background-color: var(--color-bg-blue);
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info-label { color: var(--color-gray-700); }
+.info-value { font-weight: 600; }
+
+/* --- Results helpers used across explorers --- */
+.result-description,
+.result-secondary {
+  font-size: 0.875rem;
+  color: var(--color-gray-700);
+  line-height: 1.3;
+}
+
+.result-value-small {
+  font-size: 0.875rem;
+  color: var(--color-gray-700);
+}
+
+.result-detail {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-gray-700);
+}
+
+.result-detail strong {
+  color: var(--color-gray-900);
+  font-weight: 600;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.result-box:focus {
+  outline: 2px solid var(--color-blue-interactive);
+  outline-offset: 2px;
+}
+
+.result-box:last-child {
+  margin-bottom: 0;
+}
+
+/* --- Equation mount extras --- */
+.equation-container:focus-visible {
+  outline: 2px solid var(--color-blue-interactive);
+  outline-offset: 2px;
+}
+
+.equation-container math,
+#dynamic-equation-container math {
+  max-width: 100%;
+}
+
+#html-equation,
+#mathml-equation {
+  max-width: 100%;
+}
+
+.formula-box:focus {
+  outline: 2px solid var(--color-blue-interactive);
+  outline-offset: 2px;
+}
+
+.model-equations-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+/* --- Chart a11y / focus --- */
+.chart-wrapper:focus-visible {
+  outline: 2px solid var(--color-blue-interactive);
+  outline-offset: 2px;
+}
+
+.chart-bar-button {
+  position: absolute;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.chart-bar-button:focus {
+  outline: 3px solid var(--color-blue-interactive);
+  outline-offset: -3px;
+  background: rgba(60, 106, 229, 0.1);
+}
+
+.chart-bar-button:hover {
+  background: rgba(60, 106, 229, 0.05);
+}
+
+.toggle-btn:focus-visible,
+.model-btn:focus-visible {
+  outline: 3px solid var(--color-blue-interactive);
+  outline-offset: 2px;
+}
+
+.validation-summary:focus {
+  outline: 2px solid var(--color-blue-interactive);
+  outline-offset: 2px;
+}
+
+.force-table #chart-view-btn,
+.force-table #view-chart-btn {
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* --- Table caption + tooltips --- */
+.data-table caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.data-table td[data-tooltip] {
+  cursor: help;
+  position: relative;
+}
+
+.data-table td[data-tooltip]:hover,
+.data-table td[data-tooltip]:focus {
+  background-color: var(--color-gray-100);
+}
+
+.data-table td[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-gray-900);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  white-space: normal;
+  width: max-content;
+  max-width: 18rem;
+  text-align: left;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+}
+
+.data-table td:first-child[data-tooltip]::before,
+.data-table td:nth-child(2)[data-tooltip]::before {
+  left: 0;
+  transform: translateX(0);
+}
+
+.data-table td:last-child[data-tooltip]::before,
+.data-table td:nth-last-child(2)[data-tooltip]::before {
+  left: auto;
+  right: 0;
+  transform: translateX(0);
+}
+
+.data-table td[data-tooltip]:hover::before,
+.data-table td[data-tooltip]:focus::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+.data-table td[data-tooltip]::after {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--color-gray-900);
+  z-index: 1001;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+}
+
+.data-table td:first-child[data-tooltip]::after,
+.data-table td:nth-child(2)[data-tooltip]::after {
+  left: 1rem;
+  transform: translateX(0);
+}
+
+.data-table td:last-child[data-tooltip]::after,
+.data-table td:nth-last-child(2)[data-tooltip]::after {
+  left: auto;
+  right: 1rem;
+  transform: translateX(0);
+}
+
+.data-table td[data-tooltip]:hover::after,
+.data-table td[data-tooltip]:focus::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Hide mobile abbreviations on desktop (mortgage table) */
+.mobile-abbr {
+  display: none;
+}
+
+/* Dim results when validation fails */
+.has-validation-errors .card-content {
+  opacity: 0.5;
+  pointer-events: none;
+  position: relative;
+}
+
+.has-validation-errors .card-content::before {
+  content: 'Waiting for valid inputs...';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--color-gray-900);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  z-index: 10;
+  white-space: normal;
+  text-align: center;
+  max-width: min(22rem, calc(100% - 2rem));
+  box-sizing: border-box;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
