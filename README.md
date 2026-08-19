@@ -157,14 +157,44 @@ Equation-explorer **variable colours** (`--var-*` and the aliases like `--color-
 - One row per period; numbers aligned for scanning.
 - Table view stays available (required on narrow screens via `force-table`).
 
-**Typography and zoom (CFA LDO)**
+**Typography and zoom**
 
-- Learning products target **≥ 14pt (~18px) or 18px** for labels and readable text at **100% browser zoom**.
-- **`cfa-base.css` sets `html` to 18px**; primary card copy, inputs, legend, results, and schedule tables use **`1rem` (= 18px)**. **Do not shrink** learner-facing text in `*-specific.css`.
-- **`renderChart`** uses **`CHART_FONT` (`size: 16`)** for axis ticks and tooltips — the minimum practical size inside the canvas; axis **titles** use the same family at 16px bold. Do not go smaller when editing chart options.
-- **Check at 100% and 200% zoom** — text stays readable; labels stay near the values they describe (no overlap or clipping). Chart and table toggle must remain usable.
+Typography is **split by surface** — strictest rules apply to chart/table data; calculator and results should not look oversized inside the Canvas iframe.
+
+| Surface | Rule |
+|---------|------|
+| **Chart** (ticks, legend, tooltips) | **`CHART_FONT` `size: 16`** minimum in `renderChart` — do not go smaller |
+| **Table** (schedule data) | **`1rem`** on `.data-table`; ISO currency code in **column headers** / `data-label` only, not repeated in every cell |
+| **Cards 1 & 2** (intro copy) | **`.equation-intro`** at **`0.9375rem`** (`line-height: 1.45`) — prose under the calculator / equation titles |
+| **Card 4** (results labels) | Result **`.label`** text at **`0.9375rem`**; headline **`.value`** sizes stay emphasis-sized |
+| **Inputs, legend, card titles** | Default **`1rem`** / card title scale from `cfa-base.css` — match host page; no extra bump inside the iframe |
+| **Zoom check** | Legible at **100% and 200%**; no clipped axis labels or truncated tooltips |
+
+`html { font-size: 18px }` in `cfa-base.css` sets the rem root for the LTI document. When embedded in Canvas, intro copy at **`0.9375rem`** (~17px) aligns better with surrounding course text while chart/table minimums stay protected. Do **not** shrink chart or table data text below the rows above.
+
+**Card titles (labelling)**
+
+- Card 1: **`… Calculator`** (not “Formula”) — e.g. *Compound Interest Calculator*
+- Card 2: **`Dynamic Equation`** or topic-specific equation title with **Equation** capitalised — e.g. *Dynamic Equation*, *Bond Valuation Equation*
+- Cards 3–4: topic-specific (Visualization, Results, …) — keep naming consistent with the Excel / QR spec
 
 **Wrong chart type in Excel** (e.g. pie for a time series) — flag for SME / learning design; builders implement the approved workbook.
+
+## Production explorer compliance (vanilla-calculator)
+
+When auditing **shipped** explorers (`bond`, `bondytm`, `binomial`, `divi`, `forwardexchange`, `forwardrate`, `impliedgrowth`, `mort`, `reqreturn`) against this exemplar, check:
+
+| Check | Pass criteria |
+|-------|----------------|
+| Calculator blue border | `#calculator.card` and/or `#data-entry.card` → `border: 2px solid var(--color-interactive, var(--color-blue-interactive))` in `cfa-base.css` |
+| Inputs card id | `id="calculator"` or `id="data-entry"` on the learner-input `<section class="card">` |
+| Intro typography | `.equation-intro` at **`0.9375rem`** on cards 1 & 2 |
+| Chart font floor | Axis/tooltip text **≥ 16px** in chart config |
+| Currency ISO | No `$` / `€` in learner UI; **`CURRENCY_ISO`** or equivalent; ISO in table headers |
+| QR labelling | Same variable symbols across inputs, equation, chart, table, results |
+| MathJax tabindex | Strip stray `tabindex` outside `#dynamic-equation-container` only |
+
+Fix one explorer at a time: patch `cfa-base.css` + `*-specific.css` + `index.html` titles, then spot-check in the browser and against Excel.
 
 ## Quality review (EE QR checklist)
 
