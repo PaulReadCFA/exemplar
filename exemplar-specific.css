@@ -28,24 +28,6 @@ body {
   color: var(--color-gray-800);
 }
 
-#visualizer .data-table thead th .table-th-var-n {
-  color: var(--color-teal-data);
-  font-style: italic;
-}
-
-#visualizer .data-table thead th .table-th-var-a {
-  color: var(--color-blue-interactive);
-  font-style: italic;
-}
-
-/* High zoom / reflow: allow horizontal scroll instead of clipping wide tables */
-#visualizer .exemplar-table-panel {
-  max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-}
-
 #visualizer .data-table td {
   overflow-wrap: anywhere;
 }
@@ -59,28 +41,18 @@ body {
 
 /* Legend variable colours: --var-* on --surface-card only (cfa-base v3) */
 #visualizer .exemplar-legend-var-a {
-  font-style: italic;
   color: var(--color-blue-interactive);
 }
 
 #visualizer .exemplar-legend-var-p {
-  font-style: italic;
   color: var(--color-green-data);
 }
 
 #visualizer .exemplar-legend-var-r {
-  font-style: italic;
   color: var(--color-orange-deep);
-}
-
-/* Rate label: r on white card — brand orange (--var-6) meets AA */
-.exemplar-label-var-r {
-  color: var(--color-orange-deep);
-  font-style: italic;
 }
 
 #visualizer .exemplar-legend-var-n {
-  font-style: italic;
   color: var(--color-teal-data);
 }
 
@@ -90,70 +62,7 @@ body {
   }
 }
 
-/* ---------- Inline input group ---------- */
-.input-group-inline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.25rem;
-  align-items: flex-end;
-}
-
-.input-inline {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.input-label-inline {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--color-gray-700);
-  white-space: nowrap;
-}
-
-.input-with-suffix-inline {
-  display: flex;
-  align-items: center;
-}
-
-.input-field-inline {
-  width: 6rem;
-  padding: 0.375rem 0.5rem;
-  font-size: 0.9375rem;
-  font-family: inherit;
-  border: 1.5px solid var(--color-input-border);
-  border-radius: 0.375rem;
-  color: var(--color-gray-800);
-  background: var(--surface-card);
-  line-height: 1.4;
-}
-
-/* Wider variant for fields that can hold larger values (e.g. principal up to 1,000,000) */
-.input-field-wide {
-  width: 8.5rem;
-}
-
-.input-field-inline:focus {
-  outline: 2px solid var(--color-blue-interactive);
-  outline-offset: 1px;
-  border-color: var(--color-blue-interactive);
-}
-
-.input-field-inline.error {
-  border-color: var(--color-error);
-  background-color: var(--color-error-bg);
-}
-
-@media (max-width: 480px) {
-  .input-group-inline {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  .input-field-inline,
-  .input-field-wide {
-    width: 100%;
-  }
-}
+/* Data entry (card 1) is fully defined in cfa-base.css. */
 
 /* ---------- Equation card ---------- */
 #equation-card .equation-container {
@@ -185,7 +94,7 @@ body {
   padding: 0.35rem 0.55rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 48em) {
   #visualizer .table-card-layout .data-table tbody {
     gap: 0.35rem;
   }
@@ -300,27 +209,9 @@ body {
 #calculator .input-section {
   max-width: 100%;
   min-width: 0;
-  overflow-x: hidden;
 }
 
 #calculator .validation-summary {
   margin-top: 0;
   margin-bottom: 0.75rem;
-}
-
-@media (max-width: 640px) {
-  #calculator .input-inline {
-    max-width: 100%;
-    min-width: 0;
-  }
-
-  #calculator .input-label-inline {
-    white-space: normal;
-    max-width: 100%;
-  }
-
-  #calculator .input-with-suffix-inline {
-    width: 100%;
-    max-width: 100%;
-  }
 }

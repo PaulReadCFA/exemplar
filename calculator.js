@@ -8,6 +8,8 @@
  *   P = principal, r = periodic rate (decimal), n = number of periods
  */
 
+import { getChartTypography } from './chart-typography.js';
+
 const state = { view: 'chart' };
 
 /**
@@ -22,11 +24,8 @@ const PALETTE = {
   surfaceCard: '#FFFFFF', // --surface-card
 };
 
-/** Chart.js cannot read CSS variables; keep tick/title size ≥16px (LDO ~18px body text). */
-const CHART_FONT = {
-  family: "'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-  size: 16,
-};
+/** Canvas still needs px, derived from the reader's relative root preference (16px at the 18px design root). */
+const CHART_FONT = { family: '', size: 16 };
 
 /** ISO 4217 code for visible money (EE QR: EUR not €, USD not $). */
 const CURRENCY_ISO = 'USD';
@@ -528,6 +527,9 @@ function destroyChart() {
 }
 
 function renderChart(xs, ys) {
+  const t = getChartTypography('exemplar');
+  CHART_FONT.family = t.font.family;
+  CHART_FONT.size = t.font.size;
   const canvas = $('#chart');
   if (!canvas) return;
   if (typeof window.Chart !== 'function') {
@@ -661,18 +663,56 @@ function setupReducedMotionMediaListener() {
 function renderTable(xs, ys) {
   const body = $('#table-body');
   if (!body) return;
+  // data-label mirrors the column header: it becomes the visible label when the
+  // shared base reflows each row into a card below 48em. cell-value keeps the
+  // value as a single element so it stays on the right of that label.
   body.innerHTML = xs
     .map((x, i) => {
       const y = ys[i];
       return `<tr>
-        <td data-label="Period (n)">${x}</td>
-        <td data-label="Amount (A), USD">
+        <th scope="row" class="table-var-4" data-label="Period (𝑛)">${x}</th>
+        <td data-label="Amount (𝐴, USD)">
           <span class="sr-only">${fmtMoneySpeech(y)}</span>
-          <span aria-hidden="true">${fmtMoneyAmount(y)}</span>
+          <span class="cell-value table-var-2" aria-hidden="true">${fmtMoneyAmount(y)}</span>
         </td>
       </tr>`;
     })
     .join('');
+  applyTableRoles($('#data-table'));
+}
+
+/**
+ * Mirror the implicit table semantics as explicit ARIA roles.
+ *
+ * Below 48em the shared base reflows rows into cards with display:block,
+ * which makes browsers drop the implicit table/row/cell roles. Without these
+ * attributes a screen reader reads the card as a flat run of text instead of
+ * announcing row and column positions. Harmless at wider widths, where the
+ * roles simply restate the native semantics.
+ */
+function applyTableRoles(table) {
+  if (!table) return;
+
+  table.setAttribute('role', 'table');
+  table.querySelectorAll('thead, tbody, tfoot').forEach((group) => {
+    group.setAttribute('role', 'rowgroup');
+  });
+  table.querySelectorAll('tr').forEach((row) => {
+    row.setAttribute('role', 'row');
+  });
+  table.querySelectorAll('th').forEach((header) => {
+    header.setAttribute(
+      'role',
+      header.getAttribute('scope') === 'row' ? 'rowheader' : 'columnheader'
+    );
+  });
+  table.querySelectorAll('td').forEach((cell) => {
+    cell.setAttribute('role', 'cell');
+  });
+  // colspan is ignored once the cells are display:block
+  table.querySelectorAll('[colspan]').forEach((cell) => {
+    cell.setAttribute('aria-colspan', cell.getAttribute('colspan'));
+  });
 }
 
 function renderResults(P, r, n, ys) {

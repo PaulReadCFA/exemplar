@@ -29,7 +29,7 @@ Use this folder as a **technical and design baseline** when the learning goal is
 
 | Keep | Why |
 |------|-----|
-| **`cfa-base.css`** + **`*-specific.css`** | Tokens, typography (18px root), cards, tables, embed chrome |
+| **`cfa-base.css`** + **`*-specific.css`** | Tokens, typography (112.5% root), cards, tables, embed chrome |
 | **`PALETTE`** + **`CHART_FONT`** in JS | Brand-aligned Chart.js colours and minimum readable axis/tooltip size |
 | **Chart.js hygiene** | Destroy/recreate instance, reduced motion, keyboard/tooltip patterns where applicable |
 | **Live Server / Canvas embed** | Same hosting model; `body` embed surface in `*-specific.css` |
@@ -170,7 +170,7 @@ Typography is **split by surface** — strictest rules apply to chart/table data
 | **Inputs, legend, card titles** | Default **`1rem`** / card title scale from `cfa-base.css` — match host page; no extra bump inside the iframe |
 | **Zoom check** | Legible at **100% and 200%**; no clipped axis labels or truncated tooltips |
 
-`html { font-size: 18px }` in `cfa-base.css` sets the rem root for the LTI document. When embedded in Canvas, intro copy at **`0.9375rem`** (~17px) aligns better with surrounding course text while chart/table minimums stay protected. Do **not** shrink chart or table data text below the rows above.
+`html { font-size: 112.5% }` in `cfa-base.css` sets the rem root (18px at a 16px browser default, and it scales with the reader's preference). When embedded in Canvas, intro copy at **`0.9375rem`** (~17px at that default) aligns better with surrounding course text while chart/table minimums stay protected. Do **not** shrink chart or table data text below the rows above.
 
 **Card titles (labelling)**
 

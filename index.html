@@ -85,10 +85,11 @@
             <div class="input-group-inline">
               <div class="input-inline">
                 <label for="principal" class="input-label-inline">
-                  Principal (<span class="eq-var-5">P</span>):
+                  Principal (<span class="eq-var-5">𝑃</span>):
                 </label>
                 <div class="input-with-suffix-inline">
-                  <input type="text" id="principal" class="input-field-inline input-field-wide"
+                  <span class="input-prefix-inline" aria-hidden="true">USD</span>
+                  <input type="text" id="principal" class="input-field-inline input-with-prefix"
                          inputmode="numeric" autocomplete="off" value="1,000"
                          aria-describedby="inputHelp" aria-required="true">
                 </div>
@@ -96,18 +97,19 @@
 
               <div class="input-inline">
                 <label for="rate" class="input-label-inline">
-                  Annual rate, % (<span class="exemplar-label-var-r">r</span>):
+                  Annual rate (<span class="eq-var-6">𝑟</span>):
                 </label>
                 <div class="input-with-suffix-inline">
                   <input type="number" id="rate" class="input-field-inline"
                          inputmode="decimal" step="0.01" min="0.01" max="50" value="5"
                          aria-describedby="inputHelp" aria-required="true">
+                  <span class="input-suffix-inline" aria-hidden="true">%</span>
                 </div>
               </div>
 
               <div class="input-inline">
                 <label for="periods" class="input-label-inline">
-                  Periods (<span class="eq-var-4">n</span>, integer):
+                  Periods (<span class="eq-var-4">𝑛</span>):
                 </label>
                 <div class="input-with-suffix-inline">
                   <input type="number" id="periods" class="input-field-inline"
@@ -140,10 +142,10 @@
                 <span class="legend-item" role="listitem">
                   <span class="legend-color" style="background-color: var(--color-blue-interactive);"></span>
                   <span>
-                    <span class="exemplar-legend-var-a">A</span>
+                    <span class="exemplar-legend-var-a">𝐴</span>
                     =
-                    <span class="exemplar-legend-var-p">P</span>(1 +
-                    <span class="exemplar-legend-var-r">r</span>)<sup class="exemplar-legend-var-n" style="font-size: 0.75em;">n</sup>
+                    <span class="exemplar-legend-var-p">𝑃</span>(1 +
+                    <span class="exemplar-legend-var-r">𝑟</span>)<sup class="exemplar-legend-var-n" style="font-size: 0.75em;">𝑛</sup>
                   </span>
                 </span>
               </div>
@@ -191,8 +193,8 @@
               <caption id="table-caption">Accumulated amount in USD per period for A = P(1 + r)^n</caption>
               <thead>
                 <tr>
-                  <th scope="col">Period (<em class="table-th-var-n">n</em>)</th>
-                  <th scope="col">Amount (<em class="table-th-var-a">A</em>, USD)</th>
+                  <th scope="col" class="table-var-4">Period (𝑛)</th>
+                  <th scope="col" class="table-var-2">Amount (𝐴, USD)</th>
                 </tr>
               </thead>
               <tbody id="table-body"></tbody>
