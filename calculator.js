@@ -912,6 +912,24 @@ function setupInputs() {
   });
 }
 
+function logSelfTest(name, passed, detail) {
+  if (passed) console.log(`✓ ${name}`);
+  else console.warn(`✗ ${name}${detail ? ': ' + detail : ''}`);
+}
+
+function runSelfTests() {
+  console.log('Running self-tests...');
+  const series = computeSeries(1000, 5, 10);
+  const finalA = series.ys[series.ys.length - 1];
+  logSelfTest('Defaults → A ≈ 1628.89', Math.abs(finalA - 1628.89) < 0.01, `got ${finalA}`);
+  const empty = validateAll({ principal: NaN, rate: 5, periods: 10 });
+  logSelfTest('Empty principal is required', Boolean(empty.principal));
+  const range = validateAll({ principal: 2_000_000, rate: 5, periods: 10 });
+  logSelfTest('Principal above max is rejected', Boolean(range.principal));
+  logSelfTest('Valid outputs are finite', Number.isFinite(finalA));
+  console.log('Self-tests complete');
+}
+
 function init() {
   detectNarrowScreen();
   window.addEventListener('resize', debounce(detectNarrowScreen, 200));
@@ -923,6 +941,7 @@ function init() {
   setupSkipLinks();
   setupReducedMotionMediaListener();
   refreshAll();
+  runSelfTests();
 }
 
 if (document.readyState === 'loading') {

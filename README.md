@@ -247,6 +247,26 @@ Production **Equation Explorers** are reviewed against the **EE QR Checklist** (
 4. Resize to mobile width; confirm table mode and no horizontal scroll on calculator.
 5. Confirm `formula.html` still matches dynamic equation structure.
 
+## Five-section explorer contract
+
+A new explorer is a **duplicate of this folder** plus domain maths. Do not fork another curriculum explorer as the starter.
+
+Map the SME brief into five blocks before you code:
+
+1. **Title / subtitle**
+2. **Inputs** — defaults, ranges, units (units live inside the field)
+3. **Formula** — live MathML here; static companion in `formula.html`
+4. **Headline output** — results card
+5. **Table + chart** — same numbers; toggle chrome from `view-toggle.js`
+
+Keep the four-card shell and the IDs in **HTML/JS contract** above. Domain look goes in `*-specific.css` only. Shared CSS/JS come from `_shared/` via `scripts/sync-cfa-base.sh`.
+
+## Self-tests and QA freeze
+
+`runSelfTests()` runs on load and writes to the console. This exemplar checks: defaults → **A ≈ 1,628.89**, empty principal, principal above max, and finite outputs. Copy that shape into a new explorer (defaults, empty, range, one singularity, `Number.isFinite`).
+
+Before handoff, run the browser / AT matrix in [`../_shared/README.md`](../_shared/README.md) (320px table, summary link, toggle announcement, reduced motion, VoiceOver on equation and chart). Full checklist: [`../AGENTS.md`](../AGENTS.md) definition of done.
+
 ## Model used in this exemplar
 
 **Compound interest:** **`A = P(1 + r)^n`**. Default principal **1,000**, rate **5%**, periods **10**. One chart series (amount **A** over time) and a two-column schedule table. Replace compute + MathML + chart/table/result rendering with your domain logic while keeping the same file boundaries and accessibility contracts above.
@@ -262,3 +282,4 @@ When adding a new explorer, **copy this folder**, rename the specific CSS/JS, th
 5. Wire **`RULES`** to the approved spec; enforce stated constraints in validation, not copy alone.
 6. After edits, run the **pre-submit sweep** in the QR section before claiming the build is QR-ready.
 7. Keep the **calculator card blue border** — verify `cfa-base.css` §5 includes `#calculator.card` / `#data-entry.card`; confirm the inputs section in `index.html` uses one of those ids.
+8. Keep **`runSelfTests()`** covering defaults, empty, range, singularity, and finite outputs; run the QA matrix in `_shared/README.md`.
