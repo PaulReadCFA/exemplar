@@ -9,6 +9,22 @@
  */
 
 import { getChartTypography } from './chart-typography.js';
+import {
+  updateFieldError,
+  updateValidationSummary,
+  hasErrors,
+  requiredMessage,
+  wholeNumberMessage,
+  minMessage,
+  maxMessage,
+  allFinite,
+} from './validation-ui.js';
+import {
+  applyChartTableVisibility,
+  updateToggleButtonStates as applyToggleButtons,
+  announceView,
+  VIEW_ANNOUNCEMENTS,
+} from './view-toggle.js';
 
 const state = { view: 'chart' };
 
@@ -96,102 +112,17 @@ function validateAll(raw) {
     const el = document.getElementById(id);
     const v = raw[id];
     if (el && (v === '' || v == null || Number.isNaN(v))) {
-      errors[id] = `${r.label} is required`;
+      errors[id] = requiredMessage(r.label);
       continue;
     }
     if (r.int && !Number.isInteger(v)) {
-      errors[id] = `${r.label} must be a whole number`;
+      errors[id] = wholeNumberMessage(r.label);
       continue;
     }
-    if (v < r.min) errors[id] = `${r.label} must be >= ${r.min}`;
-    else if (v > r.max) errors[id] = `${r.label} must be <= ${r.max}`;
+    if (v < r.min) errors[id] = minMessage(r.label, r.min);
+    else if (v > r.max) errors[id] = maxMessage(r.label, r.max);
   }
   return errors;
-}
-
-function updateFieldError(fieldId, msg) {
-  const el = document.getElementById(fieldId);
-  if (!el) return;
-  const hasError = !!msg;
-  const baseHelpId = 'inputHelp';
-  const errorId = `${fieldId}-error`;
-  el.classList.toggle('error', hasError);
-  el.setAttribute('aria-invalid', hasError ? 'true' : 'false');
-  if (hasError) {
-    el.setAttribute('aria-describedby', `${baseHelpId} ${errorId}`);
-    let errorEl = document.getElementById(errorId);
-    if (!errorEl) {
-      errorEl = document.createElement('span');
-      errorEl.id = errorId;
-      errorEl.className = 'sr-only';
-      errorEl.setAttribute('role', 'alert');
-      el.parentElement.appendChild(errorEl);
-    }
-    errorEl.textContent = msg;
-  } else {
-    el.setAttribute('aria-describedby', baseHelpId);
-    const errorEl = document.getElementById(errorId);
-    if (errorEl) errorEl.remove();
-  }
-}
-
-let validationLiveRegion = null;
-function announceValidationCount(cnt) {
-  if (!validationLiveRegion) {
-    validationLiveRegion = document.createElement('div');
-    validationLiveRegion.id = 'validation-live-region';
-    validationLiveRegion.className = 'sr-only';
-    validationLiveRegion.setAttribute('aria-live', 'polite');
-    validationLiveRegion.setAttribute('aria-atomic', 'true');
-    document.body.appendChild(validationLiveRegion);
-  }
-  validationLiveRegion.textContent = `${cnt} validation ${cnt === 1 ? 'error' : 'errors'}.`;
-  setTimeout(() => {
-    validationLiveRegion.textContent = '';
-  }, 1500);
-}
-
-function updateValidationSummary(errors) {
-  const sum = $('#validation-summary');
-  const list = $('#validation-list');
-  if (!sum || !list) return;
-
-  const cnt = Object.keys(errors).length;
-  const wasHidden = sum.style.display === 'none';
-
-  if (cnt) {
-    list.innerHTML = Object.entries(errors)
-      .map(
-        ([f, m]) =>
-          `<li><a href="#${f}" data-field="${f}" class="validation-error-link">${m}</a></li>`
-      )
-      .join('');
-    sum.style.display = 'block';
-    announceValidationCount(cnt);
-
-    list.querySelectorAll('.validation-error-link').forEach((link) => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const fieldId = link.getAttribute('data-field');
-        const field = document.getElementById(fieldId);
-        if (field) {
-          field.focus();
-          if (typeof field.select === 'function') field.select();
-          field.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      });
-    });
-
-    if (wasHidden) {
-      sum.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-  } else {
-    sum.style.display = 'none';
-  }
-}
-
-function hasErrors(errors) {
-  return Object.keys(errors).length > 0;
 }
 
 /* ---------- Math ---------- */
@@ -755,36 +686,12 @@ function updateButtonStates() {
   const tableBtn = $('#view-table-btn');
   const isForced = document.body.classList.contains('force-table');
   const current = isForced ? 'table' : state.view;
-
-  if (!chartBtn || !tableBtn) return;
-
-  chartBtn.classList.toggle('active', current === 'chart');
-  tableBtn.classList.toggle('active', current === 'table');
-  chartBtn.setAttribute('aria-pressed', current === 'chart');
-  tableBtn.setAttribute('aria-pressed', current === 'table');
-  chartBtn.disabled = isForced;
-
-  // Roving tabindex: one toolbar control in tab order (WAI-ARIA toolbar pattern).
-  if (isForced) {
-    chartBtn.tabIndex = -1;
-    tableBtn.tabIndex = 0;
-  } else if (current === 'chart') {
-    chartBtn.tabIndex = 0;
-    tableBtn.tabIndex = -1;
-  } else {
-    chartBtn.tabIndex = -1;
-    tableBtn.tabIndex = 0;
-  }
-}
-
-function announceView(label) {
-  const el = $('#view-announcement');
-  if (el) {
-    el.textContent = '';
-    setTimeout(() => {
-      el.textContent = label;
-    }, 30);
-  }
+  applyToggleButtons({
+    chartBtn,
+    tableBtn,
+    showingChart: current === 'chart',
+    forceTable: isForced,
+  });
 }
 
 function applyView() {
@@ -797,32 +704,30 @@ function applyView() {
 
   const isForced = document.body.classList.contains('force-table');
   const actual = isForced ? 'table' : state.view;
-
+  const showChart = actual === 'chart' && !isForced;
   const canvas = $('#chart');
-  if (actual === 'chart' && !isForced) {
-    chartWrap.style.display = 'block';
-    tableWrap.style.display = 'none';
-    chartWrap.removeAttribute('aria-hidden');
-    tableWrap.setAttribute('aria-hidden', 'true');
+
+  applyChartTableVisibility({
+    chartEl: chartWrap,
+    tableEl: tableWrap,
+    canvas,
+    showChart,
+  });
+
+  if (showChart) {
     if (chartPointLive) {
       chartPointLive.textContent = '';
       chartPointLive.removeAttribute('aria-hidden');
     }
     if (chartKbHelp) chartKbHelp.removeAttribute('aria-hidden');
     if (note) note.hidden = false;
-    if (canvas) canvas.tabIndex = 0;
   } else {
-    chartWrap.style.display = 'none';
-    tableWrap.style.display = 'block';
-    chartWrap.setAttribute('aria-hidden', 'true');
-    tableWrap.removeAttribute('aria-hidden');
     if (chartPointLive) {
       chartPointLive.textContent = '';
       chartPointLive.setAttribute('aria-hidden', 'true');
     }
     if (chartKbHelp) chartKbHelp.setAttribute('aria-hidden', 'true');
     if (note) note.hidden = true;
-    if (canvas) canvas.tabIndex = -1;
     destroyChart();
   }
 }
@@ -831,14 +736,13 @@ function setView(view) {
   if (document.body.classList.contains('force-table') && view === 'chart') {
     return;
   }
+  const changed = state.view !== view;
   state.view = view;
   updateButtonStates();
   applyView();
-  announceView(
-    view === 'chart'
-      ? 'Chart view. Data table is hidden.'
-      : 'Table view. Chart and chart announcements are hidden.',
-  );
+  if (changed) {
+    announceView(view === 'chart' ? VIEW_ANNOUNCEMENTS.chart : VIEW_ANNOUNCEMENTS.table);
+  }
 
   const isForced = document.body.classList.contains('force-table');
   if (!isForced && state.view === 'chart' && lastGoodSeries) {
@@ -921,6 +825,11 @@ function refreshAll() {
 
   const { principal: P, rate: r, periods: n } = raw;
   const { xs, ys } = computeSeries(P, r, n);
+  if (!allFinite(P, r, n, ...ys)) {
+    destroyChart();
+    lastGoodSeries = null;
+    return;
+  }
   lastGoodSeries = { xs, ys };
 
   renderEquation(P, r, n);
