@@ -1,6 +1,7 @@
 /* Compound Interest Explorer — minimal layout tweaks only.
    Shared tokens, cards, inputs, tables, and toggles come from cfa-base.css.
-   Visualizer table thead: white (--surface-card) so --var-* header colours stay on-brand (v3). */
+   Table header shading comes from the shared base (Dark Blue 10%); header
+   variables use the table-safe .table-var-* tokens, which are AA on that tint. */
 
 /* Canvas LTI embed: page chrome matches host (#f8f8f8). Cards stay --surface-card (white) per cfa-base + var-colour rules. */
 :root {
@@ -20,12 +21,6 @@ body {
 
 #results-card .exemplar-result-block .label {
   font-size: 0.9375rem;
-}
-
-/* Light header row on white: variable letters use equation tokens; label text stays gray-800 */
-#visualizer .data-table thead th {
-  background-color: var(--surface-card);
-  color: var(--color-gray-800);
 }
 
 #visualizer .data-table td {
@@ -54,12 +49,6 @@ body {
 
 #visualizer .exemplar-legend-var-n {
   color: var(--color-teal-data);
-}
-
-@media (forced-colors: active) {
-  #visualizer .data-table thead th {
-    border-bottom: 2px solid CanvasText;
-  }
 }
 
 /* Data entry (card 1) is fully defined in cfa-base.css. */
