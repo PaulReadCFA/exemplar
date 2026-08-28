@@ -27,6 +27,7 @@ import {
   announceView,
   VIEW_ANNOUNCEMENTS,
 } from './view-toggle.js';
+import { applyTableRoles } from './table-roles.js';
 
 const state = { view: 'chart' };
 
@@ -615,39 +616,6 @@ function renderTable(xs, ys) {
   applyTableRoles($('#data-table'));
 }
 
-/**
- * Mirror the implicit table semantics as explicit ARIA roles.
- *
- * Below 48em the shared base reflows rows into cards with display:block,
- * which makes browsers drop the implicit table/row/cell roles. Without these
- * attributes a screen reader reads the card as a flat run of text instead of
- * announcing row and column positions. Harmless at wider widths, where the
- * roles simply restate the native semantics.
- */
-function applyTableRoles(table) {
-  if (!table) return;
-
-  table.setAttribute('role', 'table');
-  table.querySelectorAll('thead, tbody, tfoot').forEach((group) => {
-    group.setAttribute('role', 'rowgroup');
-  });
-  table.querySelectorAll('tr').forEach((row) => {
-    row.setAttribute('role', 'row');
-  });
-  table.querySelectorAll('th').forEach((header) => {
-    header.setAttribute(
-      'role',
-      header.getAttribute('scope') === 'row' ? 'rowheader' : 'columnheader'
-    );
-  });
-  table.querySelectorAll('td').forEach((cell) => {
-    cell.setAttribute('role', 'cell');
-  });
-  // colspan is ignored once the cells are display:block
-  table.querySelectorAll('[colspan]').forEach((cell) => {
-    cell.setAttribute('aria-colspan', cell.getAttribute('colspan'));
-  });
-}
 
 function renderResults(P, r, n, ys) {
   const root = $('#results-content');
