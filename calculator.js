@@ -9,6 +9,8 @@
  */
 
 import { getChartTypography } from './chart-typography.js';
+/* Local name avoids colliding with this file's own renderEquation(). */
+import { renderEquation as renderMathML } from './equation-render.js';
 import {
   updateFieldError,
   updateValidationSummary,
@@ -342,15 +344,16 @@ function cleanMathJaxAccessibility() {
 function renderEquation(P, r, n) {
   const mount = $('#dynamic-mathml-equation');
   if (!mount) return;
-  mount.innerHTML = buildMathML(P, r, n);
 
-  if (typeof window.MathJax !== 'undefined' && window.MathJax.Hub) {
-    window.MathJax.Hub.Queue(['Typeset', window.MathJax.Hub, mount], () => {
+  // The shared mount holds the card's height and hides the raw MathML while
+  // MathJax typesets, so the cards below stay put.
+  renderMathML(mount, buildMathML(P, r, n), {
+    onTypeset: () => {
       cleanMathJaxAccessibility();
       setTimeout(cleanMathJaxAccessibility, 50);
       setTimeout(cleanMathJaxAccessibility, 200);
-    });
-  }
+    },
+  });
 }
 
 /* ---------- Chart ---------- */
