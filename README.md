@@ -138,6 +138,21 @@ Equation-explorer **variable colours** (`--var-*` and the aliases like `--color-
 8. **Small screens** — Long labels plus `nowrap` flex rows can force horizontal overflow and scrollbars. At narrow breakpoints, allow label/control to wrap or stack, keep `max-width: 100%` / `min-width: 0` on flex children as needed, and place block-level validation (e.g. summary) so the **whole** input group shifts consistently rather than individual rows reflowing oddly when errors appear.
 9. **Calculator card border** — The learner-input card is framed with **`border: 2px solid var(--color-interactive)`** (`cfa-base.css` §5). Applies to **`#calculator`** (most explorers) or **`#data-entry`** (dividend, mortgage, and similar). **Do not** put this border on equation, visualizer, or results cards. When copying `cfa-base.css`, keep this rule; if an explorer uses a different inputs-section `id`, add a matching selector in **`*-specific.css`** only.
 
+## Editorial style
+
+These apply to every explorer copied from this folder, including ones this exemplar does not demonstrate (it has no table note). The same list is house rule 14 in [`../AGENTS.md`](../AGENTS.md).
+
+| Surface | Rule |
+|---------|------|
+| Card titles | Title case, left-aligned (`Compound Interest Calculator`, `Dynamic Equation`) |
+| Input labels, axis titles, legend items | Sentence case, ending in a colon |
+| Variable colour | The letter only. Parentheses and the words around it stay neutral: `Annual rate (<span class="eq-var-6">𝑟</span>):` |
+| Money | `USD1,234.56` — ISO code, no space, no `$`, hundredths |
+| Years and period counts | Whole numbers |
+| Percentages | One decimal (`5.0%`) unless the brief asks for more |
+| Table note | Only when the table needs a caveat. `<p class="table-note"><em>Note:</em> Roman text.</p>` — do not italicize the whole line |
+| Body copy | Do not bold text that is not a heading |
+
 ## Charts and tables (learning design)
 
 **Four-card explorers** usually pair a **line chart** (pattern over time) with a **data table** (exact values). **Slim layouts** still use this section for whatever chart or table you ship. Match SME / curriculum numbers first; use this when reviewing work with Cursor or QA. Full cross-chart evaluation guidance lives in the CFA LDO *Charts & Visual Aids Evaluation Quick Reference*.
