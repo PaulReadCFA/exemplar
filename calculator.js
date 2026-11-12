@@ -879,7 +879,9 @@ function setupInputs() {
   ['principal', 'rate', 'periods'].forEach((id) => {
     const el = document.getElementById(id);
     if (!el) return;
-    ['input', 'change', 'blur'].forEach((ev) => el.addEventListener(ev, onInput));
+    /* input and change cover a real edit. blur would refresh again when the
+       value is unchanged, hiding the equation and dropping keyboard focus. */
+    ['input', 'change'].forEach((ev) => el.addEventListener(ev, onInput));
   });
 }
 
